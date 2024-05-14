@@ -62,13 +62,14 @@ def deSypher(update: Update, context: CallbackContext) -> None:
 def sypher(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         'SYPHER is the native token of deSypher. It is used to play the game, and can be earned by playing the game.\n'
-        'Get SYPHER: https://app.uniswap.org/#/swap?outputCurrency=0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
-        'BaseScan: https://basescan.org/token/0x21b9d428eb20fa075a29d51813e57bab85406620\n'
+        'Get SYPHER: [Uniswap](https://app.uniswap.org/#/swap?outputCurrency=0x21b9D428EB20FA075A29d51813E57BAb85406620)\n'
+        'BaseScan: [Link](https://basescan.org/token/0x21b9d428eb20fa075a29d51813e57bab85406620)\n'
         'Contract Address: 0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
         'Total Supply: 1,000,000\n'
         'Blockchain: Base\n'
         'Liquidity: Uniswap\n'
-        'Ticker: SYPHER\n'
+        'Ticker: SYPHER\n',
+        parse_mode='Markdown'
     )
 
 def ca(update: Update, context: CallbackContext) -> None:
