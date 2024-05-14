@@ -4,6 +4,8 @@
 
 The deSypher Telegram Bot is part of the deSypher project, providing an interactive experience for users directly within Telegram. This bot can handle various commands and interact with users to enhance their engagement with the deSypher platform.
 
+@deSypher_bot
+
 ## Features
 
 - **/start**: Initialize interaction with the bot.

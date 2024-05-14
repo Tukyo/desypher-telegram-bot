@@ -10,7 +10,7 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 
 def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Hello! I am your bot.')
+    update.message.reply_text('Hello! I am your bot. For a list of commands, please use /help.')
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
