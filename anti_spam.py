@@ -21,6 +21,6 @@ class AntiSpam:
 
     def time_to_wait(self, user_id):
         current_time = time.time()
-        if len(self.user_messages[user_id]) < self.rate_limit:
-            return 0
-        return int(self.blocked_users[user_id] - current_time)
+        if current_time < self.blocked_users[user_id]:
+            return int(self.blocked_users[user_id] - current_time)
+        return 0
