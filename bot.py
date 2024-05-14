@@ -1,6 +1,7 @@
 import os
+import time
 from dotenv import load_dotenv
-from telegram import Update
+from telegram import Update, ChatPermissions
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
 from anti_spam import AntiSpam
 
@@ -91,10 +92,21 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
 
 def handle_message(update: Update, context: CallbackContext) -> None:
     user_id = update.message.from_user.id
+    chat_id = update.message.chat.id
     username = update.message.from_user.username or update.message.from_user.first_name
+
     if anti_spam.is_spam(user_id):
         wait_time = anti_spam.time_to_wait(user_id)
         update.message.reply_text(f'{username}, you are spamming. Please wait {wait_time} seconds before sending another message.')
+
+        # Mute the user for the remaining wait time
+        until_date = int(time.time() + wait_time)
+        context.bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=user_id,
+            permissions=ChatPermissions(can_send_messages=False),
+            until_date=until_date
+        )
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
