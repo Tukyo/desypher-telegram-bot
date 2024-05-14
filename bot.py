@@ -91,10 +91,13 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
 
 def handle_message(update: Update, context: CallbackContext) -> None:
     user_id = update.message.from_user.id
+    username = update.message.from_user.username or update.message.from_user.first_name
     if anti_spam.is_spam(user_id):
         wait_time = anti_spam.time_to_wait(user_id)
-        update.message.reply_text(f'Please wait {wait_time} seconds before sending another message.')
-    
+        update.message.reply_text(f'{username}, you are spamming. Please wait {wait_time} seconds before sending another message.')
+    else:
+        # Process non-spam messages here
+        pass
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
