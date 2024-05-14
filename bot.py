@@ -105,11 +105,11 @@ def handle_message(update: Update, context: CallbackContext) -> None:
     username = update.message.from_user.username or update.message.from_user.first_name
 
     if anti_spam.is_spam(user_id):
-        wait_time = anti_spam.time_to_wait(user_id)
-        update.message.reply_text(f'{username}, you are spamming. Please wait {wait_time} seconds before sending another message.')
+        mute_time = anti_spam.mute_time  # Get the mute time from AntiSpam class
+        update.message.reply_text(f'{username}, you are spamming. You have been muted for {mute_time} seconds.')
 
-        # Mute the user for the remaining wait time
-        until_date = int(time.time() + wait_time)
+        # Mute the user for the mute time
+        until_date = int(time.time() + mute_time)
         context.bot.restrict_chat_member(
             chat_id=chat_id,
             user_id=user_id,
@@ -119,7 +119,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
 
         # Schedule job to unmute the user
         job_queue = context.job_queue
-        job_queue.run_once(unmute_user, wait_time, context={'chat_id': chat_id, 'user_id': user_id})
+        job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
