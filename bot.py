@@ -78,8 +78,15 @@ def main() -> None:
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
     
-    # Register the /start command handler
+    # Register the command handlers
     dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("help", help))
+    dispatcher.add_handler(CommandHandler("play", play))
+    dispatcher.add_handler(CommandHandler("tukyo", tukyo))
+    dispatcher.add_handler(CommandHandler("tukyogames", tukyogames))
+    dispatcher.add_handler(CommandHandler("desypher", deSypher))
+    dispatcher.add_handler(CommandHandler("sypher", sypher))
     
     # Start the Bot
     updater.start_polling()
