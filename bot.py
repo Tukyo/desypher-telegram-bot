@@ -55,7 +55,7 @@ def tukyogames(update: Update, context: CallbackContext) -> None:
 
 def deSypher(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
-        'deSypher is a Onchain game that can be played on Base. It is a puzzle game that requires SYPHER to play. The goal of the game is to guess the correct word in four attempts. Guess the correct word, or go broke!\n'
+        'deSypher is an Onchain puzzle game that can be played on Base. It is a game that requires SYPHER to play. The goal of the game is to guess the correct word in four attempts. Guess the correct word, or go broke!\n'
         'Website: https://desypher.net/\n'
     )
 
@@ -70,6 +70,17 @@ def sypher(update: Update, context: CallbackContext) -> None:
         'Liquidity: Uniswap\n'
         'Ticker: SYPHER\n'
     )
+
+def ca(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        '0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
+    )
+
+def whitepaper(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+    'Whitepaper: https://desypher.net/whitepaper.html\n'
+    )
+    
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
@@ -87,6 +98,9 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("tukyogames", tukyogames))
     dispatcher.add_handler(CommandHandler("desypher", deSypher))
     dispatcher.add_handler(CommandHandler("sypher", sypher))
+    dispatcher.add_handler(CommandHandler("contract", ca))
+    dispatcher.add_handler(CommandHandler("ca", ca))
+    dispatcher.add_handler(CommandHandler("tokenomics", sypher))
     
     # Start the Bot
     updater.start_polling()
