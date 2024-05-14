@@ -1,13 +1,16 @@
 import os
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
+from anti_spam import AntiSpam
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Get the Telegram API token from environment variables
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
+
+anti_spam = AntiSpam(rate_limit=5, time_window=10)
 
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Hello! I am the deSypher Bot. For a list of commands, please use /help.')
@@ -45,6 +48,7 @@ def tukyo(update: Update, context: CallbackContext) -> None:
 def tukyogames(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         'Tukyo Games is a game development studio that is focused on bringing innovative blockchain technology to captivating and new game ideas. We use blockchain technology, without hindering the gaming experience.\n'
+        '\n'
         'Website: https://tukyogames.com/ (Coming Soon)\n'
         '\n'
         '| Projects |\n'
@@ -56,12 +60,14 @@ def tukyogames(update: Update, context: CallbackContext) -> None:
 def deSypher(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         'deSypher is an Onchain puzzle game that can be played on Base. It is a game that requires SYPHER to play. The goal of the game is to guess the correct word in four attempts. Guess the correct word, or go broke!\n'
+        '\n'
         'Website: https://desypher.net/\n'
     )
 
 def sypher(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         'SYPHER is the native token of deSypher. It is used to play the game, and can be earned by playing the game.\n'
+        '\n'
         'Get SYPHER: [Uniswap](https://app.uniswap.org/#/swap?outputCurrency=0x21b9D428EB20FA075A29d51813E57BAb85406620)\n'
         'BaseScan: [Link](https://basescan.org/token/0x21b9d428eb20fa075a29d51813e57bab85406620)\n'
         'Contract Address: 0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
@@ -82,6 +88,12 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
     'Whitepaper: https://desypher.net/whitepaper.html\n'
     )
+
+def handle_message(update: Update, context: CallbackContext) -> None:
+    user_id = update.message.from_user.id
+    if anti_spam.is_spam(user_id):
+        wait_time = anti_spam.time_to_wait(user_id)
+        update.message.reply_text(f'Please wait {wait_time} seconds before sending another message.')
     
 
 def main() -> None:
@@ -103,6 +115,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("contract", ca))
     dispatcher.add_handler(CommandHandler("ca", ca))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
     
     # Start the Bot
     updater.start_polling()
