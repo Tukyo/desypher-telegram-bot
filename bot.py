@@ -2,7 +2,7 @@ import os
 import time
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, JobQueue  
 from anti_spam import AntiSpam
 
 # Load environment variables from .env file
@@ -90,6 +90,15 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
     'Whitepaper: https://desypher.net/whitepaper.html\n'
     )
 
+
+def unmute_user(context: CallbackContext) -> None:
+    job = context.job
+    context.bot.restrict_chat_member(
+        chat_id=job.context['chat_id'],
+        user_id=job.context['user_id'],
+        permissions=ChatPermissions(can_send_messages=True)
+    )
+
 def handle_message(update: Update, context: CallbackContext) -> None:
     user_id = update.message.from_user.id
     chat_id = update.message.chat.id
@@ -107,6 +116,10 @@ def handle_message(update: Update, context: CallbackContext) -> None:
             permissions=ChatPermissions(can_send_messages=False),
             until_date=until_date
         )
+
+        # Schedule job to unmute the user
+        job_queue = context.job_queue
+        job_queue.run_once(unmute_user, wait_time, context={'chat_id': chat_id, 'user_id': user_id})
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
