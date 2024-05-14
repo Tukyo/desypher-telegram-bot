@@ -69,7 +69,8 @@ def sypher(update: Update, context: CallbackContext) -> None:
         'Blockchain: Base\n'
         'Liquidity: Uniswap\n'
         'Ticker: SYPHER\n',
-        parse_mode='Markdown'
+        parse_mode='Markdown',
+        disable_web_page_preview=True
     )
 
 def ca(update: Update, context: CallbackContext) -> None:
