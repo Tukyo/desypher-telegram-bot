@@ -2,8 +2,9 @@ import os
 import time
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, JobQueue  
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, JobQueue, CallbackQueryHandler
 from anti_spam import AntiSpam
+from verify_user import welcome, button_callback
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,6 +14,7 @@ TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10)
 
+#region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Hello! I am the deSypher Bot. For a list of commands, please use /help.')
 
@@ -89,8 +91,9 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
     'Whitepaper: https://desypher.net/whitepaper.html\n'
     )
+#endregion Slash Commands
 
-
+#region Admin Controls
 def unmute_user(context: CallbackContext) -> None:
     job = context.job
     context.bot.restrict_chat_member(
@@ -120,6 +123,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         # Schedule job to unmute the user
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
+#endregion Admin Controls
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
@@ -141,8 +145,15 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("ca", ca))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
 
+    # Register the message handler for anti-spam
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
     
+    # Register the message handler for new users
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, welcome))
+
+    # Register the callback query handler for button clicks
+    dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='verify'))
+
     # Start the Bot
     updater.start_polling()
     
