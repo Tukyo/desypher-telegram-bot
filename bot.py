@@ -102,16 +102,16 @@ def help(update: Update, context: CallbackContext) -> None:
 
 #region Play Game
 def play(update: Update, context: CallbackContext) -> None:
-    keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='playGame')]]
+    keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='startGame')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
 
-def handle_play_game(update: Update, context: CallbackContext) -> None:
+def handle_start_game(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
-    if query.data == 'playGame':
+    if query.data == 'startGame':
         word = fetch_random_word()
-        # Store the chosen word in the user's context to use later in the game logic
+        print(f"Chosen word: {word}")
         context.user_data['chosen_word'] = word
         # Dynamically generate the game layout
         num_rows = 4
@@ -125,16 +125,27 @@ def handle_play_game(update: Update, context: CallbackContext) -> None:
         context.user_data['chat_id'] = query.message.chat_id
 
 def handle_guess(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+    key = f"{chat_id}_{user_id}"  # Unique key for each user-chat combination
+
+    # Check if there's an ongoing game for this user in this chat
+    if key not in context.chat_data or 'chosen_word' not in context.chat_data[key]:
+        # If no active game, do nothing
+        return
+
     user_guess = update.message.text.lower()
-    chosen_word = context.user_data.get('chosen_word')
+    chosen_word = context.chat_data[key].get('chosen_word')
 
-    # if not chosen_word:
-    #     update.message.reply_text("Please start a game first by using /play.")
-    #     return
-
+    # Check if the guess is not 5 letters and the user has an active game
     if len(user_guess) != 5:
         update.message.reply_text("Please guess a five-letter word!")
         return
+
+    if 'guesses' not in context.chat_data[key]:
+        context.chat_data[key]['guesses'] = []
+
+    context.chat_data[key]['guesses'].append(user_guess)
 
     # Check the guess and build the game layout
     def get_game_layout(guesses, chosen_word):
@@ -157,9 +168,9 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     context.user_data['guesses'].append(user_guess)
 
     # Update the game layout
-    game_layout = get_game_layout(context.user_data['guesses'], chosen_word)
-    chat_id = context.user_data.get('chat_id')
-    message_id = context.user_data.get('game_message_id')
+    game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
+    chat_id = context.chat_data[key]['chat_id']
+    message_id = context.chat_data[key]['game_message_id']
     if chat_id and message_id:
         context.bot.edit_message_text(chat_id=chat_id, message_id=message_id,
                                       text=f"Please guess a five letter word!\n{game_layout}")
@@ -167,11 +178,12 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     # Check if the user has guessed the word correctly
     if user_guess == chosen_word:
         update.message.reply_text("Congratulations! You've guessed the word correctly!")
-        # Reset the game state
-        context.user_data.clear()
-    elif len(context.user_data['guesses']) >= 4:
+        # Reset the game state for this user in this chat
+        del context.chat_data[key]
+    elif len(context.chat_data[key]['guesses']) >= 4:
         update.message.reply_text(f"Game over! The correct word was: {chosen_word}")
-        context.user_data.clear()
+        # Clear the active game for the specific user id in the specific chat
+        del context.chat_data[key]
 
 def update_game_layout(update: Update, context: CallbackContext) -> None:
     chat_id = context.user_data.get('chat_id')
@@ -459,6 +471,25 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
 
+#region Admin Slash Commands
+def cleargames(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+
+    # Check if the user is an admin in this chat
+    chat_admins = context.bot.get_chat_administrators(chat_id)
+    user_is_admin = any(admin.user.id == user_id for admin in chat_admins)
+
+    if user_is_admin:
+        # Clear all game data from this chat
+        keys_to_delete = [key for key in context.chat_data.keys() if key.startswith(f"{chat_id}_")]
+        for key in keys_to_delete:
+            del context.chat_data[key]
+        update.message.reply_text("All active games have been cleared.")
+    else:
+        update.message.reply_text("You must be an admin to use this command.")
+#endregion Admin Slash Commands
+
 #endregion Admin Controls
 
 def main() -> None:
@@ -468,7 +499,7 @@ def main() -> None:
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
     
-    # Register the command handlers
+    #region General Slash Command Handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help))
@@ -480,6 +511,11 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("contract", ca))
     dispatcher.add_handler(CommandHandler("ca", ca))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
+    #endregion General Slash Command Handlers
+
+    #region Admin Slash Command Handlers
+    dispatcher.add_handler(CommandHandler('cleargames', cleargames))
+    #endregion Admin Slash Command Handlers
 
     # Register the message handler for guesses
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
@@ -494,7 +530,7 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='^verify$'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
-    dispatcher.add_handler(CallbackQueryHandler(handle_play_game, pattern='^playGame$'))
+    dispatcher.add_handler(CallbackQueryHandler(handle_start_game, pattern='^startGame$'))
     
     # Start the Bot
     updater.start_polling()
