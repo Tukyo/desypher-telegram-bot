@@ -17,7 +17,7 @@ CHAT_ID = os.getenv('CHAT_ID')
 user_verification_progress = {}
 
 def handle_new_user(update: Update, context: CallbackContext) -> None:
-    if anti_raid.is_raid():
+    if AntiRaid.is_raid():
         update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
         return
     for member in update.message.new_chat_members:
