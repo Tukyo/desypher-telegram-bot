@@ -44,7 +44,15 @@ def handle_play_game(update: Update, context: CallbackContext) -> None:
     query.answer()
     if query.data == 'playGame':
         word = fetch_random_word()
-        query.edit_message_text(text=f"The game has started! Your word is: {word}")
+        # Store the chosen word in the user's context to use later in the game logic
+        context.user_data['chosen_word'] = word
+        # Dynamically generate the game layout
+        num_rows = 4
+        row_template = "⬛⬛⬛⬛⬛"
+        game_layout = "\n".join([row_template for _ in range(num_rows)])
+        # Update the message with the game layout
+        query.edit_message_text(text=f"Please guess a five letter word!\n{game_layout}")
+
 
 def fetch_random_word() -> str:
     with open('words.json', 'r') as file:
