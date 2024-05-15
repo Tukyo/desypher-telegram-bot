@@ -1,5 +1,7 @@
 import os
 import time
+import json
+import random
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
@@ -33,7 +35,22 @@ def help(update: Update, context: CallbackContext) -> None:
     )
 
 def play(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Welcome to deSypher! This is a mini-game where you can test your skills in solving puzzles. The minigame is currently under development, check back soon!')
+    keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='playGame')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text('Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
+
+def handle_play_game(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+    if query.data == 'playGame':
+        word = fetch_random_word()
+        query.edit_message_text(text=f"The game has started! Your word is: {word}")
+
+def fetch_random_word() -> str:
+    with open('words.json', 'r') as file:
+        data = json.load(file)
+        words = data['words']
+        return random.choice(words)
 
 def tukyo(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
@@ -156,7 +173,7 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='^verify$'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
-
+    dispatcher.add_handler(CallbackQueryHandler(handle_play_game, pattern='^playGame$'))
     # Start the Bot
     updater.start_polling()
     
