@@ -209,10 +209,13 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
     # Update the game layout
     game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-    game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Game*\nPlease guess a five letter word!\n{game_layout}", parse_mode='Markdown')
 
-    # Store the new message ID
-    context.chat_data[key]['game_message_id'] = game_message.message_id
+    # Check if it's not the 4th guess and the user hasn't guessed the word correctly before sending the game message
+    if len(context.chat_data[key]['guesses']) < 4 and user_guess != chosen_word:
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Game*\nPlease guess a five letter word!\n{game_layout}", parse_mode='Markdown')
+    
+        # Store the new message ID
+        context.chat_data[key]['game_message_id'] = game_message.message_id
 
     # Check if the user has guessed the word correctly
     if user_guess == chosen_word:
