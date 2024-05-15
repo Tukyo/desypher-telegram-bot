@@ -39,7 +39,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             "🖼 · https://opensea.io/collection/profectio\n"
         )
 
-        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data='verify')]]
+        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data=f'verify_{chat_id}')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
