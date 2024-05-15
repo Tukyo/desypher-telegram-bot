@@ -2,6 +2,7 @@ import os
 import time
 import json
 import random
+import telegram
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
@@ -205,7 +206,10 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
     # Delete the previous game message
     if 'game_message_id' in context.chat_data[key]:
-        context.bot.delete_message(chat_id=chat_id, message_id=context.chat_data[key]['game_message_id'])
+        try:
+            context.bot.delete_message(chat_id=chat_id, message_id=context.chat_data[key]['game_message_id'])
+        except telegram.error.BadRequest:
+            print("Message to delete not found")
 
     # Update the game layout
     game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
