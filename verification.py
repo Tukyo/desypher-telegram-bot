@@ -43,4 +43,4 @@ def handle_start_verification(update: Update, context: CallbackContext) -> None:
     verification_question = "Who is the lead developer at Tukyo Games?"
     reply_markup = generate_verification_buttons()
 
-    query.edit_message_text(text=verification_question, reply_markup=reply_markup)
+    query.message.reply_text(text=verification_question, reply_markup=reply_markup)
