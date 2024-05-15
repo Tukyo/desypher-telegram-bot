@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
+from verification import start_verification, handle_start_verification
 
 # Load environment variables from .env file
 load_dotenv()
@@ -36,5 +37,14 @@ def welcome(update: Update, context: CallbackContext) -> None:
 
 def button_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
+    user_id = query.from_user.id
     query.answer()
-    query.edit_message_text(text="Verification button clicked! (functionality to be added later)")
+
+    # Send a message to the user's DM to start the verification process
+    context.bot.send_message(chat_id=user_id, text="Welcome to Tukyo Games! Please click the button to begin verification.")
+    
+    # Start the verification process
+    start_verification(update, context)
+
+    # Optionally, you can edit the original message to indicate the button was clicked
+    query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
