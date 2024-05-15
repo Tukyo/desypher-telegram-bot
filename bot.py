@@ -248,9 +248,6 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
 #endregion Slash Commands
 
 def handle_new_user(update: Update, context: CallbackContext) -> None:
-    if anti_raid.is_raid():
-        return
-    print("Allowing new user to join, antiraid is not active.")
     for member in update.message.new_chat_members:
         user_id = member.id
         chat_id = update.message.chat.id
@@ -261,6 +258,18 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             user_id=user_id,
             permissions=ChatPermissions(can_send_messages=False)
         )
+
+        if anti_raid.is_raid():
+            update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
+            
+            # Get the user_id of the user that just joined
+            user_id = update.message.new_chat_members[0].id
+
+            # Kick the user that just joined
+            context.bot.kick_chat_member(chat_id=chat_id, user_id=user_id)
+            return
+        
+        print("Allowing new user to join, antiraid is not active.")
 
         # Send the welcome message with the verification button
         welcome_message = (
@@ -450,18 +459,6 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
 
-def handle_anti_raid(update: Update, context: CallbackContext) -> None:
-    print("New user joined the chat, checking if antiraid is active.")
-    if anti_raid.is_raid():
-        update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
-        
-        # Get the user_id of the user that just joined
-        user_id = update.message.new_chat_members[0].id
-
-        # Kick the user that just joined
-        context.bot.kick_chat_member(chat_id=update.message.chat_id, user_id=user_id)
-        return
-    handle_new_user(update, context)
 #endregion Admin Controls
 
 def main() -> None:
@@ -491,7 +488,7 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
     
     # Register the message handler for new users
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_anti_raid))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
 
     # Register the callback query handler for button clicks
     dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='^verify$'))
