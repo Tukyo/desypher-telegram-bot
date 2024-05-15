@@ -23,6 +23,7 @@ class AntiSpam:
         self.mute_time = mute_time
         self.user_messages = defaultdict(list)
         self.blocked_users = defaultdict(lambda: 0)
+        print(f"Initialized AntiSpam with rate_limit={rate_limit}, time_window={time_window}, mute_time={mute_time}")
 
     def is_spam(self, user_id):
         current_time = time.time()
@@ -105,6 +106,23 @@ def play(update: Update, context: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
 
+def end_game(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+    key = f"{chat_id}_{user_id}"  # Unique key for each user-chat combination
+
+    # Check if there's an ongoing game for this user in this chat
+    if key in context.chat_data:
+        # Delete the game message
+        if 'game_message_id' in context.chat_data[key]:
+            context.bot.delete_message(chat_id=chat_id, message_id=context.chat_data[key]['game_message_id'])
+
+        # Clear the game data
+        del context.chat_data[key]
+        update.message.reply_text("Your game has been ended.")
+    else:
+        update.message.reply_text("You don't have an ongoing game.")
+
 def handle_start_game(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
@@ -123,7 +141,8 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
                 'chosen_word': word,
                 'guesses': [],
                 'game_message_id': None,
-                'chat_id': chat_id
+                'chat_id': chat_id,
+                'player_name': first_name
             }
 
         num_rows = 4
@@ -131,7 +150,7 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
         game_layout = "\n".join([row_template for _ in range(num_rows)])
         
         # Update the message with the game layout and store the message ID
-        game_message = query.edit_message_text(text=f"{first_name}'s Game\nPlease guess a five letter word!\n{game_layout}")
+        game_message = query.edit_message_text(text=f"*{first_name}'s Game*\nPlease guess a five letter word!\n{game_layout}")
         context.chat_data[key]['game_message_id'] = game_message.message_id
         
         print(f"Game started for {first_name} in {chat_id} with message ID {game_message.message_id}")
@@ -139,6 +158,7 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
 def handle_guess(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
+    player_name = context.chat_data[key].get('player_name', 'Player')
     key = f"{chat_id}_{user_id}"  # Unique key for each user-chat combination
 
     # print(f"User {user_id} in chat {chat_id} guessed: {update.message.text}")
@@ -189,18 +209,32 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
     # Update the game layout
     game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-    game_message = context.bot.send_message(chat_id=chat_id, text=f"Please guess a five letter word!\n{game_layout}")
+    game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Game*\nPlease guess a five letter word!\n{game_layout}")
 
     # Store the new message ID
     context.chat_data[key]['game_message_id'] = game_message.message_id
 
     # Check if the user has guessed the word correctly
     if user_guess == chosen_word:
-        update.message.reply_text("Congratulations! You've guessed the word correctly!")
+        # Delete the previous game message
+        if 'game_message_id' in context.chat_data[key]:
+            context.bot.delete_message(chat_id=chat_id, message_id=context.chat_data[key]['game_message_id'])
+
+        # Update the game layout
+        game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n{game_layout}\nCongratulations! You've guessed the word correctly!", parse_mode='Markdown')
+
         print("User guessed the word correctly. Clearing game data.")
         del context.chat_data[key]
     elif len(context.chat_data[key]['guesses']) >= 4:
-        update.message.reply_text(f"Game over! The correct word was: {chosen_word}")
+        # Delete the previous game message
+        if 'game_message_id' in context.chat_data[key]:
+            context.bot.delete_message(chat_id=chat_id, message_id=context.chat_data[key]['game_message_id'])
+
+        # Update the game layout
+        game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n{game_layout}\nGame over! The correct word was: {chosen_word}")
+
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
 
@@ -555,6 +589,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help))
     dispatcher.add_handler(CommandHandler("play", play))
+    dispatcher.add_handler(CommandHandler("endgame", end_game))
     dispatcher.add_handler(CommandHandler("tukyo", tukyo))
     dispatcher.add_handler(CommandHandler("tukyogames", tukyogames))
     dispatcher.add_handler(CommandHandler("desypher", deSypher))
