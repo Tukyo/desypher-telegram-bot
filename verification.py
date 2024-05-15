@@ -18,23 +18,39 @@ def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     context.bot.send_message(chat_id=user_id, text=verification_message, reply_markup=reply_markup)
 
 def generate_verification_buttons() -> InlineKeyboardMarkup:
-    letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     required_letters = list(VERIFICATION_LETTERS)
-    random.shuffle(letters)
     
+    # Ensure all required letters are included
     for letter in required_letters:
-        if letter not in letters:
-            letters[random.randint(0, len(letters) - 1)] = letter
+        if letter in all_letters:
+            all_letters.remove(letter)
+    
+    # Shuffle the remaining letters
+    random.shuffle(all_letters)
+    
+    # Randomly select 11 letters from the shuffled list
+    selected_random_letters = all_letters[:11]
+    
+    # Combine required letters with the random letters
+    final_letters = required_letters + selected_random_letters
+    
+    # Shuffle the final list of 16 letters
+    random.shuffle(final_letters)
     
     buttons = []
     row = []
-    for i, letter in enumerate(letters[:16]):
+    for i, letter in enumerate(final_letters):
         row.append(InlineKeyboardButton(letter, callback_data=f'verify_{letter}'))
         if (i + 1) % 4 == 0:
             buttons.append(row)
             row = []
 
+    if row:
+        buttons.append(row)
+
     return InlineKeyboardMarkup(buttons)
+
 
 def handle_start_verification(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
