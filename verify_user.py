@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import CallbackContext, JobQueue
-from verification import start_verification_dm
+from verification import start_verification_dm, user_verification_progress
 
 # Load environment variables from .env file
 load_dotenv()
@@ -45,7 +45,8 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(kick_user, 600, context={'chat_id': chat_id, 'user_id': user_id})
+        job = job_queue.run_once(kick_user, 60, context={'chat_id': chat_id, 'user_id': user_id})
+        user_verification_progress[user_id] = {'job': job}
         
 def kick_user(context: CallbackContext) -> None:
     job = context.job

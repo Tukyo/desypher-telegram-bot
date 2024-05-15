@@ -104,6 +104,8 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                     user_id=user_id,
                     permissions=ChatPermissions(can_send_messages=True)
                 )
+                if 'job' in user_verification_progress[user_id]:
+                    user_verification_progress[user_id]['job'].schedule_removal()
             else:
                 context.bot.edit_message_text(
                     chat_id=user_id,
