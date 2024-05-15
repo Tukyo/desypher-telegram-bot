@@ -1,7 +1,7 @@
 import os
 import random
 from dotenv import load_dotenv
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import CallbackContext
 
 # Load environment variables from .env file
@@ -63,7 +63,8 @@ def handle_start_verification(update: Update, context: CallbackContext) -> None:
     # Initialize user verification progress
     user_verification_progress[user_id] = {
         'progress': [],
-        'verification_message_id': query.message.message_id
+        'main_message_id': query.message.message_id,
+        'chat_id': query.message.chat_id
     }
 
     verification_question = "Who is the lead developer at Tukyo Games?"
@@ -94,6 +95,12 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                     chat_id=user_id,
                     message_id=user_verification_progress[user_id]['verification_message_id'],
                     text="Verification successful, you may now return to chat!"
+                )
+                # Unmute the user in the main chat
+                context.bot.restrict_chat_member(
+                    chat_id=user_verification_progress[user_id]['chat_id'],
+                    user_id=user_id,
+                    permissions=ChatPermissions(can_send_messages=True)
                 )
             else:
                 context.bot.edit_message_text(

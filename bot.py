@@ -2,9 +2,9 @@ import os
 import time
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, JobQueue, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
 from anti_spam import AntiSpam
-from verify_user import welcome, button_callback
+from verify_user import handle_new_user, button_callback
 from verification import handle_start_verification, handle_verification_button
 
 # Load environment variables from .env file
@@ -150,7 +150,7 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
     
     # Register the message handler for new users
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, welcome))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
 
     # Register the callback query handler for button clicks
     dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='^verify$'))
