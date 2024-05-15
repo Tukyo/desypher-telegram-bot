@@ -250,6 +250,7 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
 def handle_new_user(update: Update, context: CallbackContext) -> None:
     if anti_raid.is_raid():
         return
+    print("Allowing new user to join, antiraid is not active.")
     for member in update.message.new_chat_members:
         user_id = member.id
         chat_id = update.message.chat.id
@@ -450,6 +451,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
 
 def handle_anti_raid(update: Update, context: CallbackContext) -> None:
+    print("New user joined the chat, checking if antiraid is active.")
     if anti_raid.is_raid():
         update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
         
