@@ -78,7 +78,7 @@ class AntiRaid:
 #endregion Classes
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10)
-anti_raid = AntiRaid(user_amount=2, time_out=20, anti_raid_time=180)
+anti_raid = AntiRaid(user_amount=4, time_out=20, anti_raid_time=30)
 
 # Initialize a dictionary to keep track of user verification progress
 user_verification_progress = {}
