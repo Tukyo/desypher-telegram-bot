@@ -3,15 +3,13 @@ import random
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import CallbackContext
+from shared import user_verification_progress
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Get the verification letters from environment variables
 VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
-
-# Initialize a dictionary to keep track of user verification progress
-user_verification_progress = {}
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
@@ -99,7 +97,7 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                 )
                 # Unmute the user in the main chat
                 context.bot.restrict_chat_member(
-                    chat_id=user_verification_progress[user_id]['chat_id'],
+                    chat_id=user_verification_progress[user_id]['main_chat_id'],
                     user_id=user_id,
                     permissions=ChatPermissions(can_send_messages=True)
                 )

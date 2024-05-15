@@ -1,0 +1,1 @@
+user_verification_progress = {}

@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import CallbackContext, JobQueue
 from verification import start_verification_dm
+from shared import user_verification_progress
 
 # Load environment variables from .env file
 load_dotenv()
@@ -43,9 +44,6 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
 
-        # Start the verification process in the user's DM
-        start_verification_dm(user_id, context)
-
         # Start a verification timeout job
         job_queue = context.job_queue
         job_queue.run_once(kick_user, 600, context={'chat_id': chat_id, 'user_id': user_id})
@@ -64,7 +62,13 @@ def kick_user(context: CallbackContext) -> None:
 def button_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
+    chat_id = query.data.split('_')[1]  # Extract chat_id from callback_data
     query.answer()
+
+    # Store the main chat ID in the user verification progress
+    user_verification_progress[user_id] = {
+        'main_chat_id': chat_id
+    }
 
     # Send a message to the user's DM to start the verification process
     start_verification_dm(user_id, context)
