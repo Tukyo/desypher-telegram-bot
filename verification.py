@@ -11,8 +11,6 @@ load_dotenv()
 VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
 CHAT_ID = os.getenv('CHAT_ID')
 
-print(f"MAIN_CHAT_ID: {CHAT_ID}")
-
 # Initialize a dictionary to keep track of user verification progress
 user_verification_progress = {}
 
@@ -102,7 +100,7 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                 )
                 # Unmute the user in the main chat
                 context.bot.restrict_chat_member(
-                    chat_id=MAIN_CHAT_ID,
+                    chat_id=CHAT_ID,
                     user_id=user_id,
                     permissions=ChatPermissions(can_send_messages=True)
                 )
