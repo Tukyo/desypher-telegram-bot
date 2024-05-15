@@ -10,9 +10,8 @@ load_dotenv()
 # Get the verification letters from environment variables
 VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
 
-def start_verification(update: Update, context: CallbackContext) -> None:
-    user_id = update.message.chat_id
-    verification_message = "Please click the button to begin verification."
+def start_verification_dm(user_id: int, context: CallbackContext) -> None:
+    verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
     keyboard = [[InlineKeyboardButton("Start Verification", callback_data='start_verification')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
