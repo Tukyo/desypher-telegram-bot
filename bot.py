@@ -37,68 +37,14 @@ def help(update: Update, context: CallbackContext) -> None:
 def play(update: Update, context: CallbackContext) -> None:
     keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='playGame')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('The game has started! Please guess a five letter word.', reply_markup=reply_markup)
-    context.chat_data['game'] = {
-        'word': fetch_random_word(),
-        'guesses': 0,
-        'status': 'playing',
-        'history': []
-    }
+    update.message.reply_text('Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
 
 def handle_play_game(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
     if query.data == 'playGame':
-        context.bot.send_message(chat_id=query.message.chat_id, text='Please send your guess.')
-
-def handle_guess(update: Update, context: CallbackContext) -> None:
-    # Check if there is an active game
-    if 'game' not in context.chat_data or context.chat_data['game']['status'] != 'playing':
-        update.message.reply_text('No active game found. Please start a new game using /play.')
-        return
-
-    # Retrieve the guess from the message
-    guess = update.message.text.lower().strip()
-    # Validate the guess
-    if len(guess) != 5 or not guess.isalpha():
-        update.message.reply_text('Please ensure your guess is a five-letter word.')
-        return
-
-    # Access the game data stored in the chat context
-    game_data = context.chat_data['game']
-    # Process the guess if there are remaining attempts
-    if game_data['guesses'] < 4:
-        result = evaluate_guess(guess, game_data['word'])
-        game_data['history'].append(result)
-        game_data['guesses'] += 1
-
-        message = 'The game has started! Please guess a five letter word.\n'
-        message += '\n'.join(game_data['history'])
-
-        # Check if the game is won or if all guesses are used
-        if guess == game_data['word']:
-            message = 'Congratulations! You won! 🎉 The word was ' + game_data['word']
-            game_data['status'] = 'ended'
-        elif game_data['guesses'] == 4:
-            message = 'Game over! You\'ve used all your guesses. The correct word was ' + game_data['word']
-            game_data['status'] = 'ended'
-
-        update.message.reply_text(message)
-    else:
-        update.message.reply_text('Game over! No more guesses allowed.')
-
-
-
-def evaluate_guess(guess, word):
-    result = ''
-    for i, letter in enumerate(guess):
-        if letter == word[i]:
-            result += '🟩'
-        elif letter in word:
-            result += '🟨'
-        else:
-            result += '🟥'
-    return result
+        word = fetch_random_word()
+        query.edit_message_text(text=f"The game has started! Your word is: {word}")
 
 def fetch_random_word() -> str:
     with open('words.json', 'r') as file:
@@ -228,7 +174,6 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
     dispatcher.add_handler(CallbackQueryHandler(handle_play_game, pattern='^playGame$'))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
     # Start the Bot
     updater.start_polling()
     
