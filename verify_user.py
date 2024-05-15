@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import CallbackContext, JobQueue
 from verification import start_verification_dm
-from shared import user_verification_progress
 
 # Load environment variables from .env file
 load_dotenv()
@@ -39,7 +38,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             "🖼 · https://opensea.io/collection/profectio\n"
         )
 
-        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data=f'verify_{chat_id}')]]
+        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data='verify')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
@@ -62,17 +61,10 @@ def kick_user(context: CallbackContext) -> None:
 def button_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
-    chat_id = query.data.split('_')[1]  # Extract chat_id from callback_data
-
-    # Store the main chat ID in the user verification progress
-    user_verification_progress[user_id] = {
-        'main_chat_id': chat_id
-    }
+    query.answer()
 
     # Send a message to the user's DM to start the verification process
     start_verification_dm(user_id, context)
     
     # Optionally, you can edit the original message to indicate the button was clicked
     query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
-
-    query.answer()
