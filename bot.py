@@ -78,7 +78,7 @@ class AntiRaid:
 #endregion Classes
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
-anti_raid = AntiRaid(user_amount=2, time_out=60, anti_raid_time=30)
+anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
 
 # Initialize a dictionary to keep track of user verification progress
 user_verification_progress = {}
@@ -128,9 +128,9 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     user_guess = update.message.text.lower()
     chosen_word = context.user_data.get('chosen_word')
 
-    if not chosen_word:
-        update.message.reply_text("Please start a game first by using /play.")
-        return
+    # if not chosen_word:
+    #     update.message.reply_text("Please start a game first by using /play.")
+    #     return
 
     if len(user_guess) != 5:
         update.message.reply_text("Please guess a five-letter word!")
