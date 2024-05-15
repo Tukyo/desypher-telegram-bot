@@ -133,6 +133,11 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
         chat_id = query.message.chat_id
         key = f"{chat_id}_{user_id}"
 
+        # Check if the user already has an ongoing game
+        if key in context.chat_data:
+            query.edit_message_text(text="You already have an active game. Please use the command */endgame* to end your previous game before starting a new one!", parse_mode='Markdown')
+            return
+
         word = fetch_random_word()
         print(f"Chosen word: {word} for key: {key}")
 
