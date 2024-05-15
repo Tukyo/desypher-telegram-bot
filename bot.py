@@ -51,8 +51,68 @@ def handle_play_game(update: Update, context: CallbackContext) -> None:
         row_template = "⬛⬛⬛⬛⬛"
         game_layout = "\n".join([row_template for _ in range(num_rows)])
         # Update the message with the game layout
-        query.edit_message_text(text=f"Please guess a five letter word!\n{game_layout}")
+        game_message = query.edit_message_text(text=f"Please guess a five letter word!\n{game_layout}")
+        # Store the message ID in the user's context to update it later
+        context.user_data['game_message_id'] = game_message.message_id
+        # Store the chat ID to ensure it's the specific user
+        context.user_data['chat_id'] = query.message.chat_id
 
+def handle_guess(update: Update, context: CallbackContext) -> None:
+    user_guess = update.message.text.lower()
+    chosen_word = context.user_data.get('chosen_word')
+
+    if not chosen_word:
+        update.message.reply_text("Please start a game first by using /play.")
+        return
+
+    if len(user_guess) != 5:
+        update.message.reply_text("Please guess a five-letter word!")
+        return
+
+    # Check the guess and build the game layout
+    def get_game_layout(guesses, chosen_word):
+        layout = []
+        for guess in guesses:
+            row = ""
+            for i, char in enumerate(guess):
+                if char == chosen_word[i]:
+                    row += "🟩"  # Correct letter in the correct position
+                elif char in chosen_word:
+                    row += "🟨"  # Correct letter in the wrong position
+                else:
+                    row += "🟥"  # Incorrect letter
+            layout.append(row)
+        return "\n".join(layout)
+
+    if 'guesses' not in context.user_data:
+        context.user_data['guesses'] = []
+
+    context.user_data['guesses'].append(user_guess)
+
+    # Update the game layout
+    game_layout = get_game_layout(context.user_data['guesses'], chosen_word)
+    chat_id = context.user_data.get('chat_id')
+    message_id = context.user_data.get('game_message_id')
+    if chat_id and message_id:
+        context.bot.edit_message_text(chat_id=chat_id, message_id=message_id,
+                                      text=f"Please guess a five letter word!\n{game_layout}")
+
+    # Check if the user has guessed the word correctly
+    if user_guess == chosen_word:
+        update.message.reply_text("Congratulations! You've guessed the word correctly!")
+        # Reset the game state
+        context.user_data.clear()
+    elif len(context.user_data['guesses']) >= 4:
+        update.message.reply_text(f"Game over! The correct word was: {chosen_word}")
+        context.user_data.clear()
+
+def update_game_layout(update: Update, context: CallbackContext) -> None:
+    chat_id = context.user_data.get('chat_id')
+    message_id = context.user_data.get('game_message_id')
+    if chat_id and message_id:
+        # Update the game layout for the specific user
+        new_layout = "New game layout based on user input"
+        context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_layout)
 
 def fetch_random_word() -> str:
     with open('words.json', 'r') as file:
@@ -171,6 +231,9 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("ca", ca))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
 
+    # Register the message handler for guesses
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
+    
     # Register the message handler for anti-spam
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
     
@@ -182,6 +245,7 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
     dispatcher.add_handler(CallbackQueryHandler(handle_play_game, pattern='^playGame$'))
+    
     # Start the Bot
     updater.start_polling()
     
