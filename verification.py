@@ -82,16 +82,13 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
         print(f"User {user_id} pressed: {letter}")
         print(f"Current progress: {user_verification_progress[user_id]}")
 
-        # Check if the sequence is correct so far
-        correct_sequence = VERIFICATION_LETTERS[:len(user_verification_progress[user_id])]
-        if user_verification_progress[user_id] == list(correct_sequence):
-            if len(user_verification_progress[user_id]) == len(VERIFICATION_LETTERS):
+        # Only check the sequence after the fifth button press
+        if len(user_verification_progress[user_id]) == len(VERIFICATION_LETTERS):
+            if user_verification_progress[user_id] == list(VERIFICATION_LETTERS):
                 query.message.reply_text("Verification successful, you may now return to chat!")
-                user_verification_progress.pop(user_id)
             else:
-                query.answer(text="Keep going...")
-        else:
-            query.message.reply_text("Verification failed. Please try again.")
+                query.message.reply_text("Verification failed. Please try again.")
+            # Reset progress after verification attempt
             user_verification_progress.pop(user_id)
     else:
         query.message.reply_text("Verification failed. Please try again.")
