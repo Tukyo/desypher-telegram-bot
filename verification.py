@@ -9,9 +9,9 @@ load_dotenv()
 
 # Get the verification letters from environment variables
 VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
-MAIN_CHAT_ID = os.getenv('MAIN_CHAT_ID')
+CHAT_ID = os.getenv('CHAT_ID')
 
-print(f"MAIN_CHAT_ID: {MAIN_CHAT_ID}")
+print(f"MAIN_CHAT_ID: {CHAT_ID}")
 
 # Initialize a dictionary to keep track of user verification progress
 user_verification_progress = {}
