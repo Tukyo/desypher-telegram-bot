@@ -84,7 +84,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             "🖼 · https://opensea.io/collection/profectio\n"
         )
 
-        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data='verify')]]
+        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data=f'verify_{chat_id}')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
@@ -107,19 +107,25 @@ def kick_user(context: CallbackContext) -> None:
 def button_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
-    chat_id = query.data.split('_')[1]
-    query.answer()
-
-    # Store the main chat ID in the user verification progress
-    user_verification_progress[user_id] = {
-        'main_chat_id': chat_id
-    }
-
-    # Send a message to the user's DM to start the verification process
-    start_verification_dm(user_id, context)
+    callback_data = query.data.split('_')
     
-    # Optionally, you can edit the original message to indicate the button was clicked
-    query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
+    if len(callback_data) > 1:
+        chat_id = callback_data[1]  # Extract chat_id from callback_data
+        query.answer()
+
+        # Store the main chat ID in the user verification progress
+        user_verification_progress[user_id] = {
+            'main_chat_id': chat_id
+        }
+
+        # Send a message to the user's DM to start the verification process
+        start_verification_dm(user_id, context)
+        
+        # Optionally, you can edit the original message to indicate the button was clicked
+        query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
+    else:
+        query.answer(text="An error occurred. Please try again.")
+
 
 
 def handle_start_verification(update: Update, context: CallbackContext) -> None:
