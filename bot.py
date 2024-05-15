@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 from telegram import Update, ChatPermissions
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
 from anti_spam import AntiSpam
-from verification import handle_start_verification, handle_verification_button, handle_new_user, button_callback
+from verify_user import handle_new_user, button_callback
+from verification import handle_start_verification, handle_verification_button
 
 # Load environment variables from .env file
 load_dotenv()
