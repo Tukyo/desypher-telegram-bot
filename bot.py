@@ -15,7 +15,7 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10)
-anti_raid = AntiRaid(user_amount=1, time_out=1, anti_raid_time=60)
+anti_raid = AntiRaid(user_amount=1, time_out=30, anti_raid_time=60)
 
 #region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:

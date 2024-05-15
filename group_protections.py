@@ -34,6 +34,7 @@ class AntiRaid:
         self.anti_raid_time = anti_raid_time
         self.join_times = deque()
         self.anti_raid_end_time = 0
+        print(f"Initialized AntiRaid with user_amount={user_amount}, time_out={time_out}, anti_raid_time={anti_raid_time}")
 
     def is_raid(self):
         current_time = time.time()
@@ -41,14 +42,17 @@ class AntiRaid:
             return True
 
         self.join_times.append(current_time)
+        print(f"User joined at time {current_time}. Join times: {list(self.join_times)}")
         while self.join_times and current_time - self.join_times[0] > self.time_out:
             self.join_times.popleft()
 
         if len(self.join_times) >= self.user_amount:
             self.anti_raid_end_time = current_time + self.anti_raid_time
             self.join_times.clear()
+            print(f"Raid detected. Setting anti-raid end time to {self.anti_raid_end_time}. Cleared join times.")
             return True
 
+        print(f"No raid detected. Current join count: {len(self.join_times)}")
         return False
 
     def time_to_wait(self):
