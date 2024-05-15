@@ -5,8 +5,7 @@ import random
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
-from collections import defaultdict
-from collections import deque
+from collections import deque, defaultdict
 
 # Load environment variables from .env file
 load_dotenv()
@@ -153,9 +152,9 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     chosen_word = context.chat_data[key].get('chosen_word')
 
     # Check if the guess is not 5 letters and the user has an active game
-    if len(user_guess) != 5:
+    if len(user_guess) != 5 or not user_guess.isalpha():
         print(f"Invalid guess length: {len(user_guess)}")
-        update.message.reply_text("Please guess a five-letter word!")
+        update.message.reply_text("Please guess a five-letter word using only letters!")
         return
 
     if 'guesses' not in context.chat_data[key]:
@@ -204,21 +203,6 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(f"Game over! The correct word was: {chosen_word}")
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
-
-# def update_game_layout(update: Update, context: CallbackContext) -> None:
-#     user_id = update.effective_user.id
-#     chat_id = update.effective_chat.id
-#     key = f"{chat_id}_{user_id}"
-
-#     # Ensure the game data is available
-#     if key in context.chat_data and 'game_message_id' in context.chat_data[key]:
-#         message_id = context.chat_data[key]['game_message_id']
-#         # Update the game layout for the specific user
-#         new_layout = "New game layout based on user input"
-#         context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_layout)
-#     else:
-#         print("No active game or message ID found to update layout.")
-
 
 def fetch_random_word() -> str:
     with open('words.json', 'r') as file:
@@ -286,6 +270,7 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
     )
 #endregion Slash Commands
 
+#region User Verification
 def handle_new_user(update: Update, context: CallbackContext) -> None:
     for member in update.message.new_chat_members:
         user_id = member.id
@@ -466,6 +451,7 @@ def button_callback(update: Update, context: CallbackContext) -> None:
     
     # Optionally, you can edit the original message to indicate the button was clicked
     query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
+#endregion User Verification
 
 #region Admin Controls
 def unmute_user(context: CallbackContext) -> None:
@@ -497,9 +483,10 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         # Schedule job to unmute the user
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
+#endregion Admin Controls
 
 #region Admin Slash Commands
-def cleargames(update: Update, context: CallbackContext) -> None:
+def is_user_admin(update: Update, context: CallbackContext) -> bool:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
 
@@ -507,7 +494,12 @@ def cleargames(update: Update, context: CallbackContext) -> None:
     chat_admins = context.bot.get_chat_administrators(chat_id)
     user_is_admin = any(admin.user.id == user_id for admin in chat_admins)
 
-    if user_is_admin:
+    return user_is_admin
+
+def cleargames(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+
+    if is_user_admin(update, context):
         keys_to_delete = [key for key in context.chat_data.keys() if key.startswith(f"{chat_id}_")]
         for key in keys_to_delete:
             del context.chat_data[key]
@@ -516,14 +508,44 @@ def cleargames(update: Update, context: CallbackContext) -> None:
         update.message.reply_text("All active games have been cleared.")
     else:
         update.message.reply_text("You must be an admin to use this command.")
-        print(f"User {user_id} tried to clear games but is not an admin in chat {chat_id}.")
-#endregion Admin Slash Commands
+        print(f"User {update.effective_user.id} tried to clear games but is not an admin in chat {update.effective_chat.id}.")
 
-#endregion Admin Controls
+def antiraid(update: Update, context: CallbackContext) -> None:
+    args = context.args
+
+    if is_user_admin(update, context):
+        if not args:
+            update.message.reply_text("Usage: /antiraid end or /antiraid [user_amount] [time_out] [anti_raid_time]")
+            return
+
+        command = args[0]
+        if command == 'end':
+            if anti_raid.is_raid():
+                anti_raid.anti_raid_end_time = 0
+                update.message.reply_text("Anti-raid timer ended. System reset to normal operation.")
+                print("Anti-raid timer ended. System reset to normal operation.")
+            else:
+                update.message.reply_text("No active anti-raid to end.")
+        else:
+            try:
+                user_amount = int(args[0])
+                time_out = int(args[1])
+                anti_raid_time = int(args[2])
+                anti_raid.user_amount = user_amount
+                anti_raid.time_out = time_out
+                anti_raid.anti_raid_time = anti_raid_time
+                update.message.reply_text(f"Anti-raid settings updated: user_amount={user_amount}, time_out={time_out}, anti_raid_time={anti_raid_time}")
+                print(f"Updated AntiRaid settings to user_amount={user_amount}, time_out={time_out}, anti_raid_time={anti_raid_time}")
+            except (IndexError, ValueError):
+                update.message.reply_text("Invalid arguments. Usage: /antiraid [user_amount] [time_out] [anti_raid_time]")
+    else:
+        update.message.reply_text("You must be an admin to use this command.")
+        print(f"User {update.effective_user.id} tried to use /antiraid but is not an admin in chat {update.effective_chat.id}.")
+#endregion Admin Slash Commands
 
 def main() -> None:
     # Create the Updater and pass it your bot's token
-    updater = Updater(TELEGRAM_TOKEN)
+    updater = Updater(TELEGRAM_TOKEN, use_context=True)
     
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
@@ -544,6 +566,7 @@ def main() -> None:
 
     #region Admin Slash Command Handlers
     dispatcher.add_handler(CommandHandler('cleargames', cleargames))
+    dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     #endregion Admin Slash Command Handlers
 
     # Register the message handler for guesses
