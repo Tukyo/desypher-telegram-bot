@@ -150,7 +150,7 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
         game_layout = "\n".join([row_template for _ in range(num_rows)])
         
         # Update the message with the game layout and store the message ID
-        game_message = query.edit_message_text(text=f"*{first_name}'s Game*\nPlease guess a five letter word!\n{game_layout}")
+        game_message = query.edit_message_text(text=f"*{first_name}'s Game*\nPlease guess a five letter word!\n{game_layout}", parse_mode='Markdown')
         context.chat_data[key]['game_message_id'] = game_message.message_id
         
         print(f"Game started for {first_name} in {chat_id} with message ID {game_message.message_id}")
@@ -158,8 +158,8 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
 def handle_guess(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
+    key = f"{chat_id}_{user_id}"
     player_name = context.chat_data[key].get('player_name', 'Player')
-    key = f"{chat_id}_{user_id}"  # Unique key for each user-chat combination
 
     # print(f"User {user_id} in chat {chat_id} guessed: {update.message.text}")
 
@@ -209,7 +209,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
     # Update the game layout
     game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-    game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Game*\nPlease guess a five letter word!\n{game_layout}")
+    game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Game*\nPlease guess a five letter word!\n{game_layout}", parse_mode='Markdown')
 
     # Store the new message ID
     context.chat_data[key]['game_message_id'] = game_message.message_id
@@ -233,7 +233,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         # Update the game layout
         game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n{game_layout}\nGame over! The correct word was: {chosen_word}")
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n{game_layout}\nGame over! The correct word was: {chosen_word}", parse_mode='Markdown')
 
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
