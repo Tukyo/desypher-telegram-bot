@@ -142,7 +142,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     key = f"{chat_id}_{user_id}"  # Unique key for each user-chat combination
 
-    print(f"User {user_id} in chat {chat_id} guessed: {update.message.text}")
+    # print(f"User {user_id} in chat {chat_id} guessed: {update.message.text}")
 
     # Check if there's an ongoing game for this user in this chat
     if key not in context.chat_data or 'chosen_word' not in context.chat_data[key]:
@@ -177,25 +177,23 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
                     row += "🟨"  # Correct letter in the wrong position
                 else:
                     row += "🟥"  # Incorrect letter
-            layout.append(row)
-            
+            layout.append(row + " - " + guess)
+
         while len(layout) < 4:
             layout.append("⬛⬛⬛⬛⬛")
         
         return "\n".join(layout)
 
-    # if 'guesses' not in context.user_data:
-    #     context.user_data['guesses'] = []
-
-    # context.user_data['guesses'].append(user_guess)
+    # Delete the previous game message
+    if 'game_message_id' in context.chat_data[key]:
+        context.bot.delete_message(chat_id=chat_id, message_id=context.chat_data[key]['game_message_id'])
 
     # Update the game layout
     game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-    chat_id = context.chat_data[key]['chat_id']
-    message_id = context.chat_data[key]['game_message_id']
-    if chat_id and message_id:
-        context.bot.edit_message_text(chat_id=chat_id, message_id=message_id,
-                                      text=f"Please guess a five letter word!\n{game_layout}")
+    game_message = context.bot.send_message(chat_id=chat_id, text=f"Please guess a five letter word!\n{game_layout}")
+
+    # Store the new message ID
+    context.chat_data[key]['game_message_id'] = game_message.message_id
 
     # Check if the user has guessed the word correctly
     if user_guess == chosen_word:
@@ -207,19 +205,19 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
 
-def update_game_layout(update: Update, context: CallbackContext) -> None:
-    user_id = update.effective_user.id
-    chat_id = update.effective_chat.id
-    key = f"{chat_id}_{user_id}"
+# def update_game_layout(update: Update, context: CallbackContext) -> None:
+#     user_id = update.effective_user.id
+#     chat_id = update.effective_chat.id
+#     key = f"{chat_id}_{user_id}"
 
-    # Ensure the game data is available
-    if key in context.chat_data and 'game_message_id' in context.chat_data[key]:
-        message_id = context.chat_data[key]['game_message_id']
-        # Update the game layout for the specific user
-        new_layout = "New game layout based on user input"
-        context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_layout)
-    else:
-        print("No active game or message ID found to update layout.")
+#     # Ensure the game data is available
+#     if key in context.chat_data and 'game_message_id' in context.chat_data[key]:
+#         message_id = context.chat_data[key]['game_message_id']
+#         # Update the game layout for the specific user
+#         new_layout = "New game layout based on user input"
+#         context.bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_layout)
+#     else:
+#         print("No active game or message ID found to update layout.")
 
 
 def fetch_random_word() -> str:
