@@ -216,9 +216,7 @@ def handle_anti_raid(update: Update, context: CallbackContext) -> None:
     if anti_raid.is_raid():
         update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
         return
-
-    for member in update.message.new_chat_members:
-        update.message.reply_text(f'Welcome {member.full_name}!')
+    handle_new_user(update, context)
 #endregion Admin Controls
 
 def main() -> None:
@@ -248,9 +246,6 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
     
     # Register the message handler for new users
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
-
-    # Register the handler for anti-raid
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_anti_raid))
 
     # Register the callback query handler for button clicks
