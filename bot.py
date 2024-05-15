@@ -5,7 +5,7 @@ from telegram import Update, ChatPermissions
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, JobQueue, CallbackQueryHandler
 from anti_spam import AntiSpam
 from verify_user import welcome, button_callback
-from verification import handle_start_verification
+from verification import handle_start_verification, handle_verification_button
 
 # Load environment variables from .env file
 load_dotenv()
@@ -155,6 +155,7 @@ def main() -> None:
     # Register the callback query handler for button clicks
     dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='verify'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
+    dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_[A-Z]'))
 
     # Start the Bot
     updater.start_polling()
