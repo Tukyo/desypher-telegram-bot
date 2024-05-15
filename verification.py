@@ -63,7 +63,7 @@ def handle_start_verification(update: Update, context: CallbackContext) -> None:
     # Initialize user verification progress
     user_verification_progress[user_id] = {
         'progress': [],
-        'verification_message_id': query.message.message_id
+        'main_message_id': query.message.message_id
     }
 
     verification_question = "Who is the lead developer at Tukyo Games?"
@@ -72,10 +72,10 @@ def handle_start_verification(update: Update, context: CallbackContext) -> None:
     print("Verification question:", verification_question)  # Debug log
     print("Reply markup:", reply_markup)  # Debug log
 
-    # Edit the initial verification prompt
+    # Edit the initial verification prompt to show the question
     context.bot.edit_message_text(
         chat_id=user_id,
-        message_id=user_verification_progress[user_id]['verification_message_id'],
+        message_id=user_verification_progress[user_id]['main_message_id'],
         text=verification_question,
         reply_markup=reply_markup
     )
@@ -97,28 +97,26 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
             if user_verification_progress[user_id]['progress'] == list(VERIFICATION_LETTERS):
                 context.bot.edit_message_text(
                     chat_id=user_id,
-                    message_id=user_verification_progress[user_id]['verification_message_id'],
+                    message_id=user_verification_progress[user_id]['main_message_id'],
                     text="Verification successful, you may now return to chat!"
                 )
-                # Delete the verification question and buttons
-                context.bot.delete_message(chat_id=user_id, message_id=query.message.message_id)
             else:
                 context.bot.edit_message_text(
                     chat_id=user_id,
-                    message_id=user_verification_progress[user_id]['verification_message_id'],
+                    message_id=user_verification_progress[user_id]['main_message_id'],
                     text="Verification failed. Please try again.",
                     reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Start Verification", callback_data='start_verification')]])
                 )
-                # Delete the verification question and buttons
-                context.bot.delete_message(chat_id=user_id, message_id=query.message.message_id)
             # Reset progress after verification attempt
             user_verification_progress.pop(user_id)
+        # Delete the verification grid message
+        context.bot.delete_message(chat_id=user_id, message_id=query.message.message_id)
     else:
         context.bot.edit_message_text(
             chat_id=user_id,
-            message_id=user_verification_progress[user_id]['verification_message_id'],
+            message_id=user_verification_progress[user_id]['main_message_id'],
             text="Verification failed. Please try again.",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Start Verification", callback_data='start_verification')]])
         )
-        # Delete the verification question and buttons
+        # Delete the verification grid message
         context.bot.delete_message(chat_id=user_id, message_id=query.message.message_id)
