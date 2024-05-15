@@ -44,7 +44,7 @@ def generate_verification_buttons() -> InlineKeyboardMarkup:
     buttons = []
     row = []
     for i, letter in enumerate(final_letters):
-        row.append(InlineKeyboardButton(letter, callback_data=f'verify_{letter}'))
+        row.append(InlineKeyboardButton(letter, callback_data=f'verify_letter_{letter}'))
         if (i + 1) % 4 == 0:
             buttons.append(row)
             row = []
@@ -73,7 +73,7 @@ def handle_start_verification(update: Update, context: CallbackContext) -> None:
 def handle_verification_button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
-    letter = query.data.split('_')[1]  # Get the letter from callback_data
+    letter = query.data.split('_')[2]  # Get the letter from callback_data
     query.answer()
 
     # Update user verification progress
