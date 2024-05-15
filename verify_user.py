@@ -63,7 +63,6 @@ def button_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
     chat_id = query.data.split('_')[1]  # Extract chat_id from callback_data
-    query.answer()
 
     # Store the main chat ID in the user verification progress
     user_verification_progress[user_id] = {
@@ -75,3 +74,5 @@ def button_callback(update: Update, context: CallbackContext) -> None:
     
     # Optionally, you can edit the original message to indicate the button was clicked
     query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
+
+    query.answer()
