@@ -3,7 +3,7 @@ import random
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import CallbackContext
-from group_protections import anti_raid
+from group_protections import AntiRaid
 
 # Load environment variables from .env file
 load_dotenv()
