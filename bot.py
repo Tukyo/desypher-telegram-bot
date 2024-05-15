@@ -3,7 +3,7 @@ import time
 import json
 import random
 from dotenv import load_dotenv
-from telegram import Update, ChatPermissions
+from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
 from anti_spam import AntiSpam
 from verify_user import handle_new_user, button_callback
