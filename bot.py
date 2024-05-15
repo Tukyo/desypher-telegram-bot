@@ -111,6 +111,7 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
     query.answer()
     if query.data == 'startGame':
         user_id = query.from_user.id
+        first_name = query.from_user.first_name  # Get the user's first name
         chat_id = query.message.chat_id
         key = f"{chat_id}_{user_id}"
 
@@ -131,10 +132,10 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
         game_layout = "\n".join([row_template for _ in range(num_rows)])
         
         # Update the message with the game layout and store the message ID
-        game_message = query.edit_message_text(text=f"Please guess a five letter word!\n{game_layout}")
+        game_message = query.edit_message_text(text=f"{first_name}'s Game\nPlease guess a five letter word!\n{game_layout}")
         context.chat_data[key]['game_message_id'] = game_message.message_id
         
-        print(f"Game started for {user_id} in {chat_id} with message ID {game_message.message_id}")
+        print(f"Game started for {first_name} in {chat_id} with message ID {game_message.message_id}")
 
 def handle_guess(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -145,7 +146,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
     # Check if there's an ongoing game for this user in this chat
     if key not in context.chat_data or 'chosen_word' not in context.chat_data[key]:
-        print(f"No active game found for key: {key}")
+        # print(f"No active game found for key: {key}")
         return
 
     user_guess = update.message.text.lower()
@@ -177,6 +178,10 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
                 else:
                     row += "🟥"  # Incorrect letter
             layout.append(row)
+            
+        while len(layout) < 4:
+            layout.append("⬛⬛⬛⬛⬛")
+        
         return "\n".join(layout)
 
     # if 'guesses' not in context.user_data:
@@ -505,13 +510,15 @@ def cleargames(update: Update, context: CallbackContext) -> None:
     user_is_admin = any(admin.user.id == user_id for admin in chat_admins)
 
     if user_is_admin:
-        # Clear all game data from this chat
         keys_to_delete = [key for key in context.chat_data.keys() if key.startswith(f"{chat_id}_")]
         for key in keys_to_delete:
             del context.chat_data[key]
+            print(f"Deleted key: {key}")
+    
         update.message.reply_text("All active games have been cleared.")
     else:
         update.message.reply_text("You must be an admin to use this command.")
+        print(f"User {user_id} tried to clear games but is not an admin in chat {chat_id}.")
 #endregion Admin Slash Commands
 
 #endregion Admin Controls
