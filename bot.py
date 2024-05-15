@@ -5,17 +5,83 @@ import random
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
-from group_protections import AntiSpam, AntiRaid
-from verification import handle_start_verification, handle_verification_button, handle_new_user, button_callback
+from collections import defaultdict
+from collections import deque
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Get the Telegram API token from environment variables
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
+VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
+CHAT_ID = os.getenv('CHAT_ID')
+
+#region Classes
+class AntiSpam:
+    def __init__(self, rate_limit=5, time_window=10, mute_time=60):
+        self.rate_limit = rate_limit
+        self.time_window = time_window
+        self.mute_time = mute_time
+        self.user_messages = defaultdict(list)
+        self.blocked_users = defaultdict(lambda: 0)
+
+    def is_spam(self, user_id):
+        current_time = time.time()
+        if current_time < self.blocked_users[user_id]:
+            return True
+        self.user_messages[user_id] = [msg_time for msg_time in self.user_messages[user_id] if current_time - msg_time < self.time_window]
+        self.user_messages[user_id].append(current_time)
+        if len(self.user_messages[user_id]) > self.rate_limit:
+            self.blocked_users[user_id] = current_time + self.mute_time
+            return True
+        return False
+
+    def time_to_wait(self, user_id):
+        current_time = time.time()
+        if current_time < self.blocked_users[user_id]:
+            return int(self.blocked_users[user_id] - current_time)
+        return 0
+
+class AntiRaid:
+    def __init__(self, user_amount, time_out, anti_raid_time):
+        self.user_amount = user_amount
+        self.time_out = time_out
+        self.anti_raid_time = anti_raid_time
+        self.join_times = deque()
+        self.anti_raid_end_time = 0
+        print(f"Initialized AntiRaid with user_amount={user_amount}, time_out={time_out}, anti_raid_time={anti_raid_time}")
+
+    def is_raid(self):
+        current_time = time.time()
+        if current_time < self.anti_raid_end_time:
+            return True
+
+        self.join_times.append(current_time)
+        print(f"User joined at time {current_time}. Join times: {list(self.join_times)}")
+        while self.join_times and current_time - self.join_times[0] > self.time_out:
+            self.join_times.popleft()
+
+        if len(self.join_times) >= self.user_amount:
+            self.anti_raid_end_time = current_time + self.anti_raid_time
+            self.join_times.clear()
+            print(f"Raid detected. Setting anti-raid end time to {self.anti_raid_end_time}. Cleared join times.")
+            return True
+
+        print(f"No raid detected. Current join count: {len(self.join_times)}")
+        return False
+
+    def time_to_wait(self):
+        current_time = time.time()
+        if current_time < self.anti_raid_end_time:
+            return int(self.anti_raid_end_time - current_time)
+        return 0
+#endregion Classes
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10)
 anti_raid = AntiRaid(user_amount=2, time_out=20, anti_raid_time=180)
+
+# Initialize a dictionary to keep track of user verification progress
+user_verification_progress = {}
 
 #region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
@@ -181,6 +247,178 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
     )
 #endregion Slash Commands
 
+def handle_new_user(update: Update, context: CallbackContext) -> None:
+    if anti_raid.is_raid():
+        update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
+        return
+    for member in update.message.new_chat_members:
+        user_id = member.id
+        chat_id = update.message.chat.id
+
+        # Mute the new user
+        context.bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=user_id,
+            permissions=ChatPermissions(can_send_messages=False)
+        )
+
+        # Send the welcome message with the verification button
+        welcome_message = (
+            "Welcome to Tukyo Games!\n\n"
+            "Check out the links below.\n\n"
+            "* Admins will NEVER DM YOU FIRST! *\n\n"
+            "| deSypher\n"
+            "🌐 · https://desypher.net/\n\n"
+            "| TUKYO\n"
+            "🌐 · https://tukyowave.com/\n"
+            "🐦 · https://twitter.com/tukyowave/\n"
+            "✉️ · @tukyowave\n\n"
+            "| Profectio\n"
+            "🌐 · https://www.tukyowave.com/profectio/\n"
+            "🖼 · https://opensea.io/collection/profectio\n"
+        )
+
+        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data='verify')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
+
+        # Start a verification timeout job
+        job_queue = context.job_queue
+        job_queue.run_once(kick_user, 60, context={'chat_id': chat_id, 'user_id': user_id}, name=str(user_id))
+
+def start_verification_dm(user_id: int, context: CallbackContext) -> None:
+    verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
+    keyboard = [[InlineKeyboardButton("Start Verification", callback_data='start_verification')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    message = context.bot.send_message(chat_id=user_id, text=verification_message, reply_markup=reply_markup)
+    return message.message_id
+
+def generate_verification_buttons() -> InlineKeyboardMarkup:
+    all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    required_letters = list(VERIFICATION_LETTERS)
+    
+    # Ensure all required letters are included
+    for letter in required_letters:
+        if letter in all_letters:
+            all_letters.remove(letter)
+    
+    # Shuffle the remaining letters
+    random.shuffle(all_letters)
+    
+    # Randomly select 11 letters from the shuffled list
+    selected_random_letters = all_letters[:11]
+    
+    # Combine required letters with the random letters
+    final_letters = required_letters + selected_random_letters
+    
+    # Shuffle the final list of 16 letters
+    random.shuffle(final_letters)
+    
+    buttons = []
+    row = []
+    for i, letter in enumerate(final_letters):
+        row.append(InlineKeyboardButton(letter, callback_data=f'verify_letter_{letter}'))
+        if (i + 1) % 4 == 0:
+            buttons.append(row)
+            row = []
+
+    if row:
+        buttons.append(row)
+
+    return InlineKeyboardMarkup(buttons)
+
+def handle_start_verification(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    user_id = query.from_user.id
+    query.answer()
+
+    # Initialize user verification progress
+    user_verification_progress[user_id] = {
+        'progress': [],
+        'main_message_id': query.message.message_id,
+        'chat_id': query.message.chat_id,
+        'verification_message_id': query.message.message_id
+    }
+
+    verification_question = "Who is the lead developer at Tukyo Games?"
+    reply_markup = generate_verification_buttons()
+
+    # Edit the initial verification prompt
+    context.bot.edit_message_text(
+        chat_id=user_id,
+        message_id=user_verification_progress[user_id]['verification_message_id'],
+        text=verification_question,
+        reply_markup=reply_markup
+    )
+
+def handle_verification_button(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    user_id = query.from_user.id
+    letter = query.data.split('_')[2]  # Get the letter from callback_data
+    query.answer()
+
+    # Update user verification progress
+    if user_id in user_verification_progress:
+        user_verification_progress[user_id]['progress'].append(letter)
+
+        # Only check the sequence after the fifth button press
+        if len(user_verification_progress[user_id]['progress']) == len(VERIFICATION_LETTERS):
+            if user_verification_progress[user_id]['progress'] == list(VERIFICATION_LETTERS):
+                context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=user_verification_progress[user_id]['verification_message_id'],
+                    text="Verification successful, you may now return to chat!"
+                )
+                # Unmute the user in the main chat
+                context.bot.restrict_chat_member(
+                    chat_id=CHAT_ID,
+                    user_id=user_id,
+                    permissions=ChatPermissions(can_send_messages=True)
+                )
+                current_jobs = context.job_queue.get_jobs_by_name(str(user_id))
+                for job in current_jobs:
+                    job.schedule_removal()
+            else:
+                context.bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=user_verification_progress[user_id]['verification_message_id'],
+                    text="Verification failed. Please try again.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Start Verification", callback_data='start_verification')]])
+                )
+            # Reset progress after verification attempt
+            user_verification_progress.pop(user_id)
+    else:
+        context.bot.edit_message_text(
+            chat_id=user_id,
+            message_id=user_verification_progress[user_id]['verification_message_id'],
+            text="Verification failed. Please try again.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Start Verification", callback_data='start_verification')]])
+        )
+        
+def kick_user(context: CallbackContext) -> None:
+    job = context.job
+    context.bot.kick_chat_member(
+        chat_id=job.context['chat_id'],
+        user_id=job.context['user_id']
+    )
+    context.bot.send_message(
+        chat_id=job.context['chat_id'],
+        text=f"User {job.context['user_id']} has been kicked for not verifying in time."
+    )
+
+def button_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    user_id = query.from_user.id
+    query.answer()
+
+    # Send a message to the user's DM to start the verification process
+    start_verification_dm(user_id, context)
+    
+    # Optionally, you can edit the original message to indicate the button was clicked
+    query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
+
 #region Admin Controls
 def unmute_user(context: CallbackContext) -> None:
     job = context.job
@@ -223,7 +461,6 @@ def handle_anti_raid(update: Update, context: CallbackContext) -> None:
         context.bot.kick_chat_member(chat_id=update.message.chat_id, user_id=user_id)
         return
     handle_new_user(update, context)
-
 #endregion Admin Controls
 
 def main() -> None:
