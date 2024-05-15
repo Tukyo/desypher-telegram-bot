@@ -1,7 +1,7 @@
 import os
 import random
 from dotenv import load_dotenv
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions, JobQueue
 from telegram.ext import CallbackContext
 
 # Load environment variables from .env file
@@ -50,7 +50,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(kick_user, 600, context={'chat_id': chat_id, 'user_id': user_id})
+        job_queue.run_once(kick_user, 60, context={'chat_id': chat_id, 'user_id': user_id}, name=str(user_id))
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
@@ -142,6 +142,9 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                     user_id=user_id,
                     permissions=ChatPermissions(can_send_messages=True)
                 )
+                current_jobs = context.job_queue.get_jobs_by_name(str(user_id))
+                for job in current_jobs:
+                    job.schedule_removal()
             else:
                 context.bot.edit_message_text(
                     chat_id=user_id,
