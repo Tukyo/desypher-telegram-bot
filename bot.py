@@ -15,7 +15,7 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10)
-anti_raid = AntiRaid(user_amount=1, time_out=30, anti_raid_time=60)
+anti_raid = AntiRaid(user_amount=2, time_out=20, anti_raid_time=180)
 
 #region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
@@ -215,8 +215,15 @@ def handle_message(update: Update, context: CallbackContext) -> None:
 def handle_anti_raid(update: Update, context: CallbackContext) -> None:
     if anti_raid.is_raid():
         update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
+        
+        # Get the user_id of the user that just joined
+        user_id = update.message.new_chat_members[0].id
+
+        # Kick the user that just joined
+        context.bot.kick_chat_member(chat_id=update.message.chat_id, user_id=user_id)
         return
     handle_new_user(update, context)
+
 #endregion Admin Controls
 
 def main() -> None:
