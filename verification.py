@@ -18,7 +18,8 @@ def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     keyboard = [[InlineKeyboardButton("Start Verification", callback_data='start_verification')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    context.bot.send_message(chat_id=user_id, text=verification_message, reply_markup=reply_markup)
+    message = context.bot.send_message(chat_id=user_id, text=verification_message, reply_markup=reply_markup)
+    return message.message_id
 
 def generate_verification_buttons() -> InlineKeyboardMarkup:
     all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -60,7 +61,10 @@ def handle_start_verification(update: Update, context: CallbackContext) -> None:
     query.answer()
 
     # Initialize user verification progress
-    user_verification_progress[user_id] = []
+    user_verification_progress[user_id] = {
+        'progress': [],
+        'verification_message_id': query.message.message_id
+    }
 
     verification_question = "Who is the lead developer at Tukyo Games?"
     reply_markup = generate_verification_buttons()
@@ -68,7 +72,12 @@ def handle_start_verification(update: Update, context: CallbackContext) -> None:
     print("Verification question:", verification_question)  # Debug log
     print("Reply markup:", reply_markup)  # Debug log
 
-    query.message.reply_text(text=verification_question, reply_markup=reply_markup)
+    # Delete the initial verification prompt
+    context.bot.delete_message(chat_id=user_id, message_id=user_verification_progress[user_id]['verification_message_id'])
+
+    # Send the verification question with buttons
+    message = query.message.reply_text(text=verification_question, reply_markup=reply_markup)
+    user_verification_progress[user_id]['verification_message_id'] = message.message_id
 
 def handle_verification_button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
@@ -78,16 +87,21 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
 
     # Update user verification progress
     if user_id in user_verification_progress:
-        user_verification_progress[user_id].append(letter)
+        user_verification_progress[user_id]['progress'].append(letter)
         print(f"User {user_id} pressed: {letter}")
-        print(f"Current progress: {user_verification_progress[user_id]}")
+        print(f"Current progress: {user_verification_progress[user_id]['progress']}")
 
         # Only check the sequence after the fifth button press
-        if len(user_verification_progress[user_id]) == len(VERIFICATION_LETTERS):
-            if user_verification_progress[user_id] == list(VERIFICATION_LETTERS):
+        if len(user_verification_progress[user_id]['progress']) == len(VERIFICATION_LETTERS):
+            if user_verification_progress[user_id]['progress'] == list(VERIFICATION_LETTERS):
                 query.message.reply_text("Verification successful, you may now return to chat!")
+                # Delete the verification question and buttons
+                context.bot.delete_message(chat_id=user_id, message_id=user_verification_progress[user_id]['verification_message_id'])
             else:
                 query.message.reply_text("Verification failed. Please try again.")
+                # Delete the verification question and buttons, and resend the verification question
+                context.bot.delete_message(chat_id=user_id, message_id=user_verification_progress[user_id]['verification_message_id'])
+                handle_start_verification(update, context)
             # Reset progress after verification attempt
             user_verification_progress.pop(user_id)
     else:
