@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatPermissions
 from telegram.ext import CallbackContext, JobQueue
 from verification import start_verification_dm
-from shared import user_verification_progress  # Import the shared dictionary
+from shared import user_verification_progress
 
 # Load environment variables from .env file
 load_dotenv()
@@ -39,7 +39,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             "🖼 · https://opensea.io/collection/profectio\n"
         )
 
-        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data=f'verify_{chat_id}')]]
+        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data='verify')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
@@ -47,7 +47,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         # Start a verification timeout job
         job_queue = context.job_queue
         job_queue.run_once(kick_user, 600, context={'chat_id': chat_id, 'user_id': user_id})
-
+        
 def kick_user(context: CallbackContext) -> None:
     job = context.job
     context.bot.kick_chat_member(
