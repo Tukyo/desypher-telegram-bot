@@ -18,7 +18,7 @@ CHAT_ID = os.getenv('CHAT_ID')
 
 #region Classes
 class AntiSpam:
-    def __init__(self, rate_limit=5, time_window=10, mute_time=60):
+    def __init__(self, rate_limit, time_window, mute_time):
         self.rate_limit = rate_limit
         self.time_window = time_window
         self.mute_time = mute_time
@@ -77,8 +77,8 @@ class AntiRaid:
         return 0
 #endregion Classes
 
-anti_spam = AntiSpam(rate_limit=5, time_window=10)
-anti_raid = AntiRaid(user_amount=4, time_out=20, anti_raid_time=30)
+anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
+anti_raid = AntiRaid(user_amount=2, time_out=60, anti_raid_time=30)
 
 # Initialize a dictionary to keep track of user verification progress
 user_verification_progress = {}
