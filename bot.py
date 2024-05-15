@@ -5,7 +5,7 @@ import random
 from dotenv import load_dotenv
 from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
-from anti_spam import AntiSpam
+from group_protections import AntiSpam, AntiRaid
 from verification import handle_start_verification, handle_verification_button, handle_new_user, button_callback
 
 # Load environment variables from .env file
@@ -15,6 +15,7 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10)
+anti_raid = AntiRaid(user_amount=1, time_out=1, anti_raid_time=60)
 
 #region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
@@ -33,6 +34,7 @@ def help(update: Update, context: CallbackContext) -> None:
         '/sypher: This command will provide you with information about the SYPHER token.\n'
     )
 
+#region Play Game
 def play(update: Update, context: CallbackContext) -> None:
     keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='playGame')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -118,6 +120,7 @@ def fetch_random_word() -> str:
         data = json.load(file)
         words = data['words']
         return random.choice(words)
+#endregion Play Game
 
 def tukyo(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
@@ -208,6 +211,14 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         # Schedule job to unmute the user
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
+
+def handle_anti_raid(update: Update, context: CallbackContext) -> None:
+    if anti_raid.is_raid():
+        update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
+        return
+
+    for member in update.message.new_chat_members:
+        update.message.reply_text(f'Welcome {member.full_name}!')
 #endregion Admin Controls
 
 def main() -> None:
@@ -238,6 +249,9 @@ def main() -> None:
     
     # Register the message handler for new users
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
+
+    # Register the handler for anti-raid
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_anti_raid))
 
     # Register the callback query handler for button clicks
     dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='^verify$'))
