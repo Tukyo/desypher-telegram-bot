@@ -153,7 +153,7 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, welcome))
 
     # Register the callback query handler for button clicks
-    dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='verify'))
+    dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='^verify$'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
 
