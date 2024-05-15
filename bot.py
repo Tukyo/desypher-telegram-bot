@@ -52,30 +52,42 @@ def handle_play_game(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=query.message.chat_id, text='Please send your guess.')
 
 def handle_guess(update: Update, context: CallbackContext) -> None:
-    guess = update.message.text.lower()
-    chat_data = context.chat_data['game']
+    # Check if there is an active game
+    if 'game' not in context.chat_data or context.chat_data['game']['status'] != 'playing':
+        update.message.reply_text('No active game found. Please start a new game using /play.')
+        return
+
+    # Retrieve the guess from the message
+    guess = update.message.text.lower().strip()
+    # Validate the guess
     if len(guess) != 5 or not guess.isalpha():
         update.message.reply_text('Please ensure your guess is a five-letter word.')
         return
 
-    if chat_data['guesses'] < 4:
-        result = evaluate_guess(guess, chat_data['word'])
-        chat_data['history'].append(result)
-        chat_data['guesses'] += 1
+    # Access the game data stored in the chat context
+    game_data = context.chat_data['game']
+    # Process the guess if there are remaining attempts
+    if game_data['guesses'] < 4:
+        result = evaluate_guess(guess, game_data['word'])
+        game_data['history'].append(result)
+        game_data['guesses'] += 1
 
         message = 'The game has started! Please guess a five letter word.\n'
-        message += '\n'.join(chat_data['history'])
+        message += '\n'.join(game_data['history'])
 
-        if guess == chat_data['word']:
-            message = 'Congratulations! You won! 🎉 The word was ' + chat_data['word']
-            chat_data['status'] = 'ended'
-        elif chat_data['guesses'] == 4:
-            message = 'Game over! You\'ve used all your guesses. The correct word was ' + chat_data['word']
-            chat_data['status'] = 'ended'
+        # Check if the game is won or if all guesses are used
+        if guess == game_data['word']:
+            message = 'Congratulations! You won! 🎉 The word was ' + game_data['word']
+            game_data['status'] = 'ended'
+        elif game_data['guesses'] == 4:
+            message = 'Game over! You\'ve used all your guesses. The correct word was ' + game_data['word']
+            game_data['status'] = 'ended'
 
         update.message.reply_text(message)
     else:
         update.message.reply_text('Game over! No more guesses allowed.')
+
+
 
 def evaluate_guess(guess, word):
     result = ''
