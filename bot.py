@@ -8,6 +8,29 @@ from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboa
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
 from collections import deque, defaultdict
 
+#
+## This bot was developed by Tukyo Games for the deSypher project.
+## https://desypher.net/
+#
+## Commands
+### /start - Start the bot
+### /help - Get a list of commands
+### /play - Start a mini-game of deSypher within Telegram
+### /endgame - End your current game
+### /tukyo - Information about the developer of this bot and deSypher
+### /tukyogames - Information about Tukyo Games and our projects
+### /deSypher - Direct link to the main game, play it using SYPHER tokens
+### /sypher - Information about the SYPHER token
+### /contract /ca - Contract address for the SYPHER token
+### /tokenomics - Information about the SYPHER token
+#
+## Admin Commands
+### /cleargames - Clear all active games in the chat
+### /antiraid - Manage the anti-raid system
+#### /antiraid end /anti-raid [user_amount] [time_out] [anti_raid_time]
+### /mute /unmute [username] - Toggle mute for a user
+#
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -125,7 +148,7 @@ def end_game(update: Update, context: CallbackContext) -> None:
 
         # Clear the game data
         del context.chat_data[key]
-        update.message.reply_text("Your game has been ended.")
+        update.message.reply_text("Your game has been deleted.")
     else:
         update.message.reply_text("You don't have an ongoing game.")
 
@@ -603,6 +626,38 @@ def antiraid(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text("You must be an admin to use this command.")
         print(f"User {update.effective_user.id} tried to use /antiraid but is not an admin in chat {update.effective_chat.id}.")
+
+def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
+    args = context.args
+    if not args:
+        update.message.reply_text("Usage: /mute [username] or /unmute [username]")
+        return
+
+    username = args[0]
+    chat_id = update.effective_chat.id
+
+    if is_user_admin(update, context):
+        user_id = next((member.user.id for member in context.bot.get_chat_members(chat_id) if member.user.username == username), None)
+        if user_id is None:
+            update.message.reply_text(f"User {username} not found.")
+            return
+
+        context.bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=user_id,
+            permissions=ChatPermissions(can_send_messages=not mute)
+        )
+
+        action = "muted" if mute else "unmuted"
+        update.message.reply_text(f"User {username} has been {action}.")
+    else:
+        update.message.reply_text("You must be an admin to use this command.")
+
+def mute(update: Update, context: CallbackContext) -> None:
+    toggle_mute(update, context, True)
+
+def unmute(update: Update, context: CallbackContext) -> None:
+    toggle_mute(update, context, False)
 #endregion Admin Slash Commands
 
 def main() -> None:
@@ -630,6 +685,8 @@ def main() -> None:
     #region Admin Slash Command Handlers
     dispatcher.add_handler(CommandHandler('cleargames', cleargames))
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
+    dispatcher.add_handler(CommandHandler("mute", mute))
+    dispatcher.add_handler(CommandHandler("unmute", unmute))
     #endregion Admin Slash Command Handlers
 
     # Register the message handler for guesses
