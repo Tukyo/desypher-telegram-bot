@@ -1,5 +1,4 @@
 import os
-import re
 import time
 import json
 import random
@@ -427,13 +426,8 @@ def website(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
-def escape_markdown(text):
-    """Escape markdown characters."""
-    escape_chars = r'_*[]()~`>#+-=|{}.!'
-    return re.sub(r'([{}])'.format(re.escape(escape_chars)), r'\\\1', text)
-
 def report(update: Update, context: CallbackContext) -> None:
-    admins = [
+    admins= [
         '@tukyowave',
         '@jetLunar',
         '@pr0satoshi',
@@ -442,14 +436,15 @@ def report(update: Update, context: CallbackContext) -> None:
     ]
 
     chat_id = update.effective_chat.id
-    CHAT_ID = int(os.getenv('CHAT_ID'))
 
     if chat_id == CHAT_ID:
-        # Concatenate mentions with invisible or minimal visible text
-        admin_mentions = ' '.join([f"[​](tg://resolve?domain={username[1:]})" for username in admins])  # Using zero-width space inside brackets
+        admin_mentions = ' '.join(admins)
 
-        report_message = f"Reported Message to admins.\n{escape_markdown(admin_mentions)}"
-        context.bot.send_message(CHAT_ID, text=report_message, parse_mode='MarkdownV2', disable_web_page_preview=True)
+        report_message = f"Reported Message to admins.\n {admin_mentions}\n"
+        message = context.bot.send_message(CHAT_ID, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+
+        # Immediately edit the message to remove the usernames
+        context.bot.edit_message_text(chat_id=CHAT_ID, message_id=message.message_id, text="⚠️ Reported Message to Admins ⚠️", parse_mode='Markdown', disable_web_page_preview=True)
     else:
         update.message.reply_text("This command can only be used in the main chat.")
 #endregion Main Slash Commands
