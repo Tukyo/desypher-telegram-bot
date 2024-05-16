@@ -68,14 +68,6 @@ else:
 # Create a contract instance
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
-admins= [
-    '@tukyowave',
-    '@test',
-    '@bob',
-    '@sue',
-    '@george'
-]
-
 #region Classes
 class AntiSpam:
     def __init__(self, rate_limit, time_window, mute_time):
@@ -167,9 +159,8 @@ def help(update: Update, context: CallbackContext) -> None:
             '/tukyo: This will provide information about the developer of this bot, and deSypher.\n'
             '/tukyogames: This will provide information about Tukyo Games and our projects.\n'
             '/deSypher: This will direct you to the main game, you can play it using SYPHER tokens!\n'
-            '/sypher: This command will provide you with information about the SYPHER token.\n'
+            '/sypher /tokenomics: These commands will provide you with information about the SYPHER token.\n'
             '/contract /ca: These commands will provide you with the contract address for the SYPHER token.\n'
-            '/tokenomics: This will provide you with information about the SYPHER token.\n'
             '/website: This will provide you with a link to the deSypher website.\n'
             '/report: Use this by responding to a message to report the message to group admins.\n'
             '/price: This will provide you with the price of the SYPHER token in USD. Use 3 digit currency modifiers to get the price in other fiat currencies. Ex: "/price eur".\n'
@@ -360,6 +351,7 @@ def tukyo(update: Update, context: CallbackContext) -> None:
             'Twitter/X: https://twitter.com/TUKYOWAVE\n'
             'Instagram: https://www.instagram.com/tukyowave/\n'
             'Medium: https://tukyo.medium.com/\n'
+            'Youtube: https://www.youtube.com/tukyo\n'
             'Spotify: https://sptfy.com/QGbt\n'
             'Bandcamp: https://tukyo.bandcamp.com/\n'
             'Github: https://github.com/tukyo\n'
@@ -435,17 +427,25 @@ def website(update: Update, context: CallbackContext) -> None:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
 def report(update: Update, context: CallbackContext) -> None:
+    admins= [
+        '@tukyowave',
+        '@jetLunar',
+        '@pr0satoshi',
+        '@dzhv_bradbrown',
+        '@motorgala'
+    ]
+
     chat_id = update.effective_chat.id
-    CHAT_ID = int(os.getenv('CHAT_ID'))  # Convert CHAT_ID to integer
+    CHAT_ID = int(os.getenv('CHAT_ID'))
 
     if chat_id == CHAT_ID:
-        admin_mentions = ', '.join(admins)
+        # Concatenate mentions with invisible or minimal visible text
+        admin_mentions = ' '.join([f"[​](tg://resolve?domain={username[1:]})" for username in admins])  # Using zero-width space inside brackets
 
-        report_message = f"Reported Message to admins.\n {admin_mentions}\n"
-        context.bot.send_message(CHAT_ID, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+        report_message = f"Reported Message to admins.\n{admin_mentions}"
+        context.bot.send_message(CHAT_ID, text=report_message, parse_mode='MarkdownV2', disable_web_page_preview=True)
     else:
         update.message.reply_text("This command can only be used in the main chat.")
-
 #endregion Main Slash Commands
 
 #region Ethereum Logic
@@ -561,7 +561,6 @@ def plot_candlestick_chart(data_frame):
     save_path = '/tmp/candlestick_chart.png'
     mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
-
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
