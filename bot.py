@@ -6,8 +6,6 @@ import requests
 import telegram
 import pandas as pd
 import mplfinance as mpf
-import matplotlib.pyplot as plt
-from matplotlib.image import imread
 from web3 import Web3
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -510,24 +508,31 @@ def prepare_data_for_chart(ohlcv_data):
     data_frame.set_index('Date', inplace=True)
     return data_frame
 
-
-
 def plot_candlestick_chart(data_frame):
-    mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8, 'axes.facecolor':(1, 1, 1, 0.75)})
+    mpf_style = mpf.make_mpf_style(
+        base_mpf_style='nightclouds',
+        rc={
+            'font.size': 8,
+            'axes.labelcolor': '#166009',
+            'axes.edgecolor': '#0f3e07',
+            'xtick.color': '#0f3e07',
+            'ytick.color': '#0f3e07',
+            'grid.color': '#0f3e07',
+            'grid.linestyle': '--',
+            'figure.facecolor': 'black',
+            'axes.facecolor': 'black'
+        }
+    )
+    mc = mpf.make_marketcolors(
+        up='#2dc60e',
+        down='#ff0000',
+        edge='inherit',
+        wick='inherit',
+        volume='inherit'
+    )
+    s = mpf.make_mpf_style(marketcolors=mc, base_mpf_style=mpf_style)
     save_path = '/tmp/candlestick_chart.png'
-
-    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, 
-                             gridspec_kw={'height_ratios': [2, 1]})  # Create two subplots, one for the candlestick chart and one for the volume
-
-    ap = mpf.make_addplot(data_frame['Volume'], panel=1, type='bar', color='g', alpha=0.75)
-    mpf.plot(data_frame, addplot=ap, type='candle', style=mpf_style)  
-
-    # Add a logo at the top left of the chart
-    logo = imread('assets/logo.png')  # Replace 'logo.png' with the path to your logo
-    fig.figimage(logo, 0, fig.bbox.ymax, zorder=10)  # The second and third arguments are the x and y coordinates of the logo. The zorder argument sets the order in which elements are drawn on the plot.
-
-    plt.savefig(save_path)
-    plt.close(fig)
+    mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
 
 #endregion Ethereum Logic

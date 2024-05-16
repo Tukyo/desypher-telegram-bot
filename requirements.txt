@@ -4,4 +4,3 @@ urllib3==1.26.5
 web3
 pandas
 mplfinance
-matplotlib
