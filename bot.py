@@ -58,6 +58,7 @@ BASESCAN_API_KEY = os.getenv('BASESCAN_API')
 web3 = Web3(Web3.HTTPProvider(BASE_ENDPOINT))
 contract_address = config['contractAddress']
 abi = config['abi']
+lp_address = config['lpAddress']
 
 if web3.is_connected():
     network_id = web3.net.version
@@ -132,6 +133,8 @@ class AntiRaid:
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
 anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
+
+sypherBot = Bot(token=TELEGRAM_TOKEN)
 
 RATE_LIMIT = 100  # Maximum number of allowed commands
 TIME_PERIOD = 60  # Time period in seconds
@@ -520,7 +523,7 @@ def plot_candlestick_chart(data_frame):
         marketcolors=mc,
         rc={
             'font.size': 8,
-            'axes.titlesize': 'large',
+            'axes.titlesize': 'small',
             'axes.titleweight': 'bold',
             'axes.labelcolor': '#2dc60e',
             'axes.edgecolor': '#2dc60e',
@@ -536,6 +539,21 @@ def plot_candlestick_chart(data_frame):
     mpf.plot(data_frame, type='candle', style=s, volume=True, title='SYPHER', savefig=save_path)
     print(f"Chart saved to {save_path}")
 
+def buy_listener(event):
+    to_address = event['args']['to']
+    value = web3.fromWei(event['args']['value'], 'ether')  # Converting from Wei to Ether
+    message = f"Address {to_address} bought {value} SYPHER!"
+    sypherBot.send_message(chat_id=CHAT_ID, text=message)
+    print(message)  # Optional: for logging
+
+# Event filter for Transfer events from the LP address
+event_filter = contract.events.Transfer.createFilter(fromBlock='latest', argument_filters={'from': lp_address})
+
+def log_loop(event_filter, poll_interval):
+    while True:
+        for event in event_filter.get_new_entries():
+            buy_listener(event)
+        time.sleep(poll_interval)
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
@@ -973,6 +991,8 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_game, pattern='^startGame$'))
+
+    log_loop(event_filter, 1)
     
     # Start the Bot
     updater.start_polling()

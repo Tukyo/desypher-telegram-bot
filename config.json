@@ -341,5 +341,6 @@
           "stateMutability": "nonpayable",
           "type": "function"
         }
-      ]
+      ],
+    "lpAddress": "0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b"
 }
