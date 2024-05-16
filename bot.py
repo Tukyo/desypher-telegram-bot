@@ -515,7 +515,7 @@ print(data_frame.head())  # Print first few rows to verify
 def plot_candlestick_chart(data_frame):
     # Set the style and plot the chart
     mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
-    save_path = '/candlestick_chart.png'  # Define the path to save the chart
+    save_path = '/tmp/candlestick_chart.png'  # Use /tmp directory to save the chart
     mpf.plot(data_frame, type='candle', style=mpf_style, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
 
