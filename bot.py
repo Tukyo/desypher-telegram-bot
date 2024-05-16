@@ -686,7 +686,7 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
         if len(context.args) > 0:
             time_parameter = context.args[0]
             mute_duration = parse_time_parameter(time_parameter)
-            until_date = datetime.now() + timedelta(seconds=mute_duration)
+            until_date = (datetime.now() + timedelta(seconds=mute_duration)).timestamp()
 
         context.bot.restrict_chat_member(
             chat_id=chat_id,
@@ -700,7 +700,10 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
         if until_date is not None:
             mute_duration_str = format_duration(mute_duration)
 
-        update.message.reply_text(f"User {username} has been {action} for {mute_duration_str}.")
+        if mute_duration_str != "forever":
+            update.message.reply_text(f"User {username} has been {action} for {mute_duration_str}.")
+        else:
+            update.message.reply_text(f"User {username} has been {action} forever.")
     else:
         update.message.reply_text("You must be an admin to use this command.")
 
@@ -764,7 +767,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     dispatcher.add_handler(CommandHandler("mute", mute))
     dispatcher.add_handler(CommandHandler("unmute", unmute))
-    dispatcher.add_handler(CommandHandler("mute_duration", mute_duration))
+    dispatcher.add_handler(CommandHandler("muteduration", mute_duration))
     #endregion Admin Slash Command Handlers
 
     # Register the message handler for guesses
