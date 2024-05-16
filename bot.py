@@ -520,10 +520,12 @@ def plot_candlestick_chart(data_frame):
         marketcolors=mc,
         rc={
             'font.size': 8,
-            'axes.labelcolor': '#166009',
-            'axes.edgecolor': '#0f3e07',
-            'xtick.color': '#0f3e07',
-            'ytick.color': '#0f3e07',
+            'axes.titlesize': 'large',
+            'axes.titleweight': 'bold',
+            'axes.labelcolor': '#2dc60e',
+            'axes.edgecolor': '#2dc60e',
+            'xtick.color': '#2dc60e',
+            'ytick.color': '#2dc60e',
             'grid.color': '#0f3e07',
             'grid.linestyle': '--',
             'figure.facecolor': 'black',
@@ -531,7 +533,7 @@ def plot_candlestick_chart(data_frame):
         }
     )
     save_path = '/tmp/candlestick_chart.png'
-    mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
+    mpf.plot(data_frame, type='candle', style=s, volume=True, title='SYPHER', savefig=save_path)
     print(f"Chart saved to {save_path}")
 
 #endregion Ethereum Logic
