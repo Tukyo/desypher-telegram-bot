@@ -547,7 +547,7 @@ def buy_listener(event):
     print(message)  # Optional: for logging
 
 # Event filter for Transfer events from the LP address
-event_filter = contract.events.Transfer.createFilter(fromBlock='latest', argument_filters={'from': lp_address})
+event_filter = contract.events.Transfer.create_filter(fromBlock='latest', argument_filters={'from': lp_address})
 
 def log_loop(event_filter, poll_interval):
     while True:
