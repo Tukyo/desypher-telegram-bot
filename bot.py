@@ -45,11 +45,11 @@ web3_provider_uri = os.getenv('ENDPOINT')
 
 web3 = Web3(Web3.HTTPProvider(web3_provider_uri))
 
-if web3.isConnected():
+if web3.is_connected():
     print("Connected to Ethereum node")
 else:
     print("Failed to connect")
-
+    
 #region Classes
 class AntiSpam:
     def __init__(self, rate_limit, time_window, mute_time):
