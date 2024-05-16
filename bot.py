@@ -436,7 +436,9 @@ def website(update: Update, context: CallbackContext) -> None:
 
 def report(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    if (chat_id == CHAT_ID):
+    CHAT_ID = int(os.getenv('CHAT_ID'))  # Convert CHAT_ID to integer
+
+    if chat_id == CHAT_ID:
         admin_mentions = ', '.join(admins)
 
         report_message = f"Reported Message to admins.\n {admin_mentions}\n"
