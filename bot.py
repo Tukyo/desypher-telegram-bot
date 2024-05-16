@@ -509,8 +509,16 @@ def prepare_data_for_chart(ohlcv_data):
     return data_frame
 
 def plot_candlestick_chart(data_frame):
-    mpf_style = mpf.make_mpf_style(
+    mc = mpf.make_marketcolors(
+        up='#2dc60e',
+        down='#ff0000',
+        edge='inherit',
+        wick='inherit',
+        volume='inherit'
+    )
+    s = mpf.make_mpf_style(
         base_mpf_style='nightclouds',
+        marketcolors=mc,
         rc={
             'font.size': 8,
             'axes.labelcolor': '#166009',
@@ -523,14 +531,6 @@ def plot_candlestick_chart(data_frame):
             'axes.facecolor': 'black'
         }
     )
-    mc = mpf.make_marketcolors(
-        up='#2dc60e',
-        down='#ff0000',
-        edge='inherit',
-        wick='inherit',
-        volume='inherit'
-    )
-    s = mpf.make_mpf_style(marketcolors=mc, base_mpf_style=mpf_style)
     save_path = '/tmp/candlestick_chart.png'
     mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
