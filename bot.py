@@ -516,12 +516,14 @@ def plot_candlestick_chart(data_frame):
     mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
     save_path = '/tmp/candlestick_chart.png'
 
-    fig, ax = plt.subplots()
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, 
+                             gridspec_kw={'height_ratios': [2, 1]})  # Create two subplots, one for the candlestick chart and one for the volume
 
     # Set the background image with correct extent
-    ax.imshow(img, aspect='auto', extent=[data_frame.index[0], data_frame.index[-1], min(data_frame['Low']), max(data_frame['High'])], zorder=0)
+    axes[0].imshow(img, aspect='auto', extent=[data_frame.index[0], data_frame.index[-1], min(data_frame['Low']), max(data_frame['High'])], zorder=0)
 
-    mpf.plot(data_frame, ax=ax, type='candle', style=mpf_style, volume=True)
+    ap = mpf.make_addplot(data_frame['Volume'], panel=1, type='bar', color='g')  # Create an addplot object for the volume
+    mpf.plot(data_frame, ax=axes[0], addplot=ap, type='candle', style=mpf_style)  # Pass the addplot object to the mpf.plot() function
 
     plt.savefig(save_path)
     plt.close(fig)
