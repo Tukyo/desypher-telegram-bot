@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import json
 import random
@@ -426,13 +427,18 @@ def website(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
+def escape_markdown(text):
+    """Escape markdown characters."""
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    return re.sub(r'([{}])'.format(re.escape(escape_chars)), r'\\\1', text)
+
 def report(update: Update, context: CallbackContext) -> None:
-    admins= [
-        '%40tukyowave',
-        '%40jetLunar',
-        '%40pr0satoshi',
-        '%40dzhv_bradbrown',
-        '%40motorgala'
+    admins = [
+        '@tukyowave',
+        '@jetLunar',
+        '@pr0satoshi',
+        '@dzhv_bradbrown',
+        '@motorgala'
     ]
 
     chat_id = update.effective_chat.id
@@ -442,7 +448,7 @@ def report(update: Update, context: CallbackContext) -> None:
         # Concatenate mentions with invisible or minimal visible text
         admin_mentions = ' '.join([f"[​](tg://resolve?domain={username[1:]})" for username in admins])  # Using zero-width space inside brackets
 
-        report_message = f"Reported Message to admins.\n{admin_mentions}"
+        report_message = f"Reported Message to admins.\n{escape_markdown(admin_mentions)}"
         context.bot.send_message(CHAT_ID, text=report_message, parse_mode='MarkdownV2', disable_web_page_preview=True)
     else:
         update.message.reply_text("This command can only be used in the main chat.")
