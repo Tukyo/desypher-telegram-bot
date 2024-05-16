@@ -431,7 +431,6 @@ def get_token_price_in_weth(contract_address):
             
             if weth_pair:
                 price_in_weth = weth_pair['priceNative']
-                print(f"Price of the token in WETH: {price_in_weth}")
                 return price_in_weth
             else:
                 print("No WETH pair found for this token.")
@@ -470,6 +469,25 @@ def get_token_price_in_fiat(contract_address, currency):
     # Calculate token price in the specified currency
     token_price_in_fiat = float(token_price_in_weth) * weth_price_in_fiat
     return token_price_in_fiat
+
+def fetch_ohlcv_data():
+    current_timestamp = int(time.time())  # Current time as Unix timestamp
+    url = "https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/day"
+    params = {
+        'aggregate': '1h',
+        'before_timestamp': current_timestamp,
+        'limit': '100',
+        'currency': 'usd'
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json()  # Process this data as needed
+    else:
+        print("Failed to fetch data:", response.status_code)
+        return None
+
+ohlcv_data = fetch_ohlcv_data()
+print(ohlcv_data)
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
@@ -479,15 +497,15 @@ def price(update: Update, context: CallbackContext) -> None:
         currency = currency.lower()
 
         # Check if the provided currency is supported
-        if currency not in ['usd', 'eur']:
-            update.message.reply_text("Unsupported currency. Please use 'usd' or 'eur'.")
+        if currency not in ['usd', 'eur', 'jpy', 'gbp', 'aud', 'cad', 'mxn']:
+            update.message.reply_text("Unsupported currency. Please use 'usd', 'eur'. 'jpy', 'gbp', 'aud', 'cad' or 'mxn'.")
             return
 
         # Fetch and format the token price in the specified currency
         token_price_in_fiat = get_token_price_in_fiat(contract_address, currency)
         if token_price_in_fiat is not None:
             formatted_price = format(token_price_in_fiat, '.4f')
-            update.message.reply_text(f"SYPHER: {currency.upper()}: {formatted_price}")
+            update.message.reply_text(f"SYPHER • {currency.upper()}: {formatted_price}")
         else:
             update.message.reply_text(f"Failed to retrieve the price of the token in {currency.upper()}.")
     else:
