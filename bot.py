@@ -310,7 +310,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         # Update the game layout
         game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nCongratulations! You've guessed the word correctly!\n\nIf you enjoyed this, you can play the game with SYPHER tokens on the [*website*](https://desypher.net/).", parse_mode='Markdown')
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nCongratulations! You've guessed the word correctly!\n\nIf you enjoyed this, you can play the game with SYPHER tokens on the [website](https://desypher.net/).", parse_mode='Markdown')
         print("User guessed the word correctly. Clearing game data.")
         del context.chat_data[key]
     elif len(context.chat_data[key]['guesses']) >= 4:
@@ -323,7 +323,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         # Update the game layout
         game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nGame over! The correct word was: {chosen_word}\n\nTry again on the [*website*](https://desypher.net/), you'll probably have better luck if you play with SPYHER tokens.", parse_mode='Markdown')
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nGame over! The correct word was: {chosen_word}\n\nTry again on the [website](https://desypher.net/), you'll probably have a better time playing with SPYHER tokens.", parse_mode='Markdown')
 
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
@@ -478,7 +478,7 @@ def fetch_ohlcv_data():
     one_hour_ago = now - timedelta(hours=1)
     start_of_hour_timestamp = int(one_hour_ago.timestamp())
 
-    url = "https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/day"
+    url = "https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/minute"
     params = {
         'aggregate': '1m',
         'before_timestamp': start_of_hour_timestamp,
