@@ -107,10 +107,10 @@ def play(update: Update, context: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     base_dir = os.path.dirname(__file__)
-    gif_path = os.path.join(base_dir, 'assets', 'banner.gif')
+    photo_path = os.path.join(base_dir, 'assets', 'banner.gif')
     
-    with open(gif_path, 'rb') as gif:
-        context.bot.send_animation(chat_id=update.effective_chat.id, animation=gif, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
+    with open(photo_path, 'rb') as photo:
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
 
 def end_game(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -248,7 +248,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         # Update the game layout
         game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nCongratulations! You've guessed the word correctly!\n\nIf you enjoyed this, you can play the game with SYPHER tokens on the *[*website*](https://desypher.net/)*.", parse_mode='Markdown')
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nCongratulations! You've guessed the word correctly!\n\nIf you enjoyed this, you can play the game with SYPHER tokens on the [*website*](https://desypher.net/).", parse_mode='Markdown')
         print("User guessed the word correctly. Clearing game data.")
         del context.chat_data[key]
     elif len(context.chat_data[key]['guesses']) >= 4:
@@ -261,7 +261,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         # Update the game layout
         game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nGame over! The correct word was: {chosen_word}\n\nTry again on the *[*website*](https://desypher.net/)*, you'll probably have better luck if you play with SPYHER tokens.", parse_mode='Markdown')
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nGame over! The correct word was: {chosen_word}\n\nTry again on the [*website*](https://desypher.net/), you'll probably have better luck if you play with SPYHER tokens.", parse_mode='Markdown')
 
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
