@@ -360,6 +360,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
     for member in update.message.new_chat_members:
         user_id = member.id
         user_ids[member.username] = user_id
+        print(f"New user joined, username {member.username} added to the user_ids dictionary.")
         chat_id = update.message.chat.id
 
         # Mute the new user
