@@ -475,7 +475,7 @@ def get_token_price_in_fiat(contract_address, currency):
 
 def fetch_ohlcv_data():
     now = datetime.now()
-    one_hour_ago = now - datetime.timedelta(hours=1)
+    one_hour_ago = now - timedelta(hours=1)
     start_of_hour_timestamp = int(one_hour_ago.timestamp())
 
     url = "https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/day"
