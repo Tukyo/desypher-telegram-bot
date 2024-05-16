@@ -519,8 +519,6 @@ def plot_candlestick_chart(data_frame):
     mpf.plot(data_frame, type='candle', style=mpf_style, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
 
-plot_candlestick_chart(data_frame)
-
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
@@ -546,11 +544,18 @@ def price(update: Update, context: CallbackContext) -> None:
 
 def chart(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
-            '[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
-            parse_mode='Markdown',
-            disable_web_page_preview=True
-        )
+        ohlcv_data = fetch_ohlcv_data()
+        if ohlcv_data:
+            data_frame = prepare_data_for_chart(ohlcv_data)
+            plot_candlestick_chart(data_frame)
+            update.message.reply_photo(photo=open('/tmp/candlestick_chart.png', 'rb'))
+            update.message.reply_text(
+                '[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
+                parse_mode='Markdown',
+                disable_web_page_preview=True
+            )
+        else:
+            update.message.reply_text('Failed to fetch data or generate chart. Please try again later.')
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 #endregion Ethereum Slash Commands
