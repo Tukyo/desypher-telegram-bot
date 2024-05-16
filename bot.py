@@ -473,14 +473,14 @@ def get_token_price_in_fiat(contract_address, currency):
     token_price_in_fiat = float(token_price_in_weth) * weth_price_in_fiat
     return token_price_in_fiat
 
-def fetch_ohlcv_data():
+def fetch_ohlcv_data(time_frame):
     now = datetime.now()
     one_hour_ago = now - timedelta(hours=1)
     start_of_hour_timestamp = int(one_hour_ago.timestamp())
-
-    url = "https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/minute"
+    
+    url = f"https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/{time_frame}"
     params = {
-        'aggregate': '1m',
+        'aggregate': '1' + time_frame[0],  # '1m', '1h', '1d' depending on the time frame
         'before_timestamp': start_of_hour_timestamp,
         'limit': '60',  # Fetch only the last hour data
         'currency': 'usd'
@@ -491,9 +491,6 @@ def fetch_ohlcv_data():
     else:
         print("Failed to fetch data:", response.status_code)
         return None
-
-ohlcv_data = fetch_ohlcv_data()
-# print(ohlcv_data)
 
 def prepare_data_for_chart(ohlcv_data):
     ohlcv_list = ohlcv_data['data']['attributes']['ohlcv_list']
@@ -510,10 +507,6 @@ def prepare_data_for_chart(ohlcv_data):
     data_frame.sort_values('Date', inplace=True)  # Ensure data is sorted by date
     data_frame.set_index('Date', inplace=True)
     return data_frame
-
-# Assuming `ohlcv_data` is fetched from the function `fetch_ohlcv_data()`
-data_frame = prepare_data_for_chart(ohlcv_data)
-print(data_frame.head())  # Print first few rows to verify
 
 def plot_candlestick_chart(data_frame):
     mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
@@ -545,14 +538,29 @@ def price(update: Update, context: CallbackContext) -> None:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
 def chart(update: Update, context: CallbackContext) -> None:
+    args = context.args
+    time_frame = 'minute'  # default to minute if no argument is provided
+    
+    if args:
+        interval_arg = args[0].lower()
+        if interval_arg == 'h':
+            time_frame = 'hour'
+        elif interval_arg == 'd':
+            time_frame = 'day'
+        elif interval_arg == 'm':
+            time_frame = 'minute'
+        else:
+            update.message.reply_text('Invalid time frame specified. Please use /chart with m, h, or d.')
+            return
+        
     if rate_limit_check():
-        ohlcv_data = fetch_ohlcv_data()
+        ohlcv_data = fetch_ohlcv_data(time_frame)
         if ohlcv_data:
             data_frame = prepare_data_for_chart(ohlcv_data)
             plot_candlestick_chart(data_frame)
             update.message.reply_photo(
                 photo=open('/tmp/candlestick_chart.png', 'rb'),
-                caption='[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
+                caption='\n[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
                 parse_mode='Markdown'
             )
         else:
