@@ -667,7 +667,7 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
         if len(context.args) > 0:
             time_parameter = context.args[0]
             mute_duration = parse_time_parameter(time_parameter)
-            until_date = datetime.datetime.now() + timedelta(seconds=mute_duration)
+            until_date = datetime.now() + timedelta(seconds=mute_duration)
 
         context.bot.restrict_chat_member(
             chat_id=chat_id,
