@@ -107,10 +107,10 @@ def play(update: Update, context: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     base_dir = os.path.dirname(__file__)
-    photo_path = os.path.join(base_dir, 'assets', 'banner.gif')
+    gif_path = os.path.join(base_dir, 'assets', 'banner.gif')
     
-    with open(photo_path, 'rb') as photo:
-        context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
+    with open(gif_path, 'rb') as gif:
+        context.bot.send_animation(chat_id=update.effective_chat.id, animation=gif, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
 
 def end_game(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -140,7 +140,10 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
 
         # Check if the user already has an ongoing game
         if key in context.chat_data:
-            query.edit_message_text(text="You already have an active game. Please use the command */endgame* to end your previous game before starting a new one!", parse_mode='Markdown')
+            # Delete the old message
+            context.bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
+            # Send a new message
+            context.bot.send_message(chat_id=chat_id, text="You already have an active game. Please use the command */endgame* to end your previous game before starting a new one!", parse_mode='Markdown')
             return
 
         word = fetch_random_word()
@@ -160,8 +163,11 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
         row_template = "⬛⬛⬛⬛⬛"
         game_layout = "\n".join([row_template for _ in range(num_rows)])
         
-        # Update the message with the game layout and store the message ID
-        game_message = query.edit_message_text(text=f"*{first_name}'s Game*\nPlease guess a five letter word!\n\n{game_layout}", parse_mode='Markdown')
+        # Delete the old message
+        context.bot.delete_message(chat_id=chat_id, message_id=query.message.message_id)
+
+        # Send a new message with the game layout and store the message ID
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{first_name}'s Game*\nPlease guess a five letter word!\n\n{game_layout}", parse_mode='Markdown')
         context.chat_data[key]['game_message_id'] = game_message.message_id
         
         print(f"Game started for {first_name} in {chat_id} with message ID {game_message.message_id}")
