@@ -70,7 +70,7 @@ else:
 # Create a contract instance
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
-img = mpimg.imread('/assets/chart-background.png')
+img = mpimg.imread('assets/chart-background.png')
 
 #region Classes
 class AntiSpam:
