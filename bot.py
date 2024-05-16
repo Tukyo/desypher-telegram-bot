@@ -66,21 +66,34 @@ total_supply = contract.functions.totalSupply().call()
 
 print(f"Total supply: {total_supply}")
 
-def fetch_total_holders(contract_address, basescan_api_key):
-    # URL for getting token holder count
-    url = f"https://api.basescan.io/api?module=token&action=tokenholderlist&contractaddress={contract_address}&apikey={basescan_api_key}"
+def get_token_price_in_weth(contract_address):
+    apiUrl = f"https://api.dexscreener.com/latest/dex/tokens/{contract_address}"
     try:
-        response = requests.get(url)
-        response.raise_for_status()  # Will raise an HTTPError for bad requests (4XX or 5XX)
+        response = requests.get(apiUrl)
+        response.raise_for_status()
         data = response.json()
-        # Assuming 'result' contains the list of holders and their info
-        return len(data['result'])  # Return the count of holders
+        
+        if data['pairs'] and len(data['pairs']) > 0:
+            # Find the pair with WETH as the quote token
+            weth_pair = next((pair for pair in data['pairs'] if pair['quoteToken']['symbol'] == 'WETH'), None)
+            
+            if weth_pair:
+                price_in_weth = weth_pair['priceNative']
+                print(f"Price of the token in WETH: {price_in_weth}")
+                return price_in_weth
+            else:
+                print("No WETH pair found for this token.")
+                return None
+        else:
+            print("No pairs found for this token.")
+            return None
     except requests.RequestException as e:
-        print(f"Error fetching data: {e}")
-        return 0
+        print(f"Error fetching token price from DexScreener: {e}")
+        return None
     
-total_holders = fetch_total_holders(contract_address, basescan_api_key)
-print(f"Total holders of the contract: {total_holders}")
+# Fetch and print the token price in WETH on startup
+token_price_in_weth = get_token_price_in_weth(contract_address)
+print(f"Current token price in WETH: {token_price_in_weth}")
 
 #region Classes
 class AntiSpam:
