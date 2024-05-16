@@ -6,6 +6,8 @@ import requests
 import telegram
 import pandas as pd
 import mplfinance as mpf
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from web3 import Web3
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -67,6 +69,8 @@ else:
 
 # Create a contract instance
 contract = web3.eth.contract(address=contract_address, abi=abi)
+
+img = mpimg.imread('/assets/chart-background.png')
 
 #region Classes
 class AntiSpam:
@@ -509,9 +513,22 @@ def prepare_data_for_chart(ohlcv_data):
     return data_frame
 
 def plot_candlestick_chart(data_frame):
-    mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
+    mpf_style = mpf.make_mpf_style(
+        base_mpf_style='charles',
+        rc={'font.size': 8}
+        )
+    
     save_path = '/tmp/candlestick_chart.png'
-    mpf.plot(data_frame, type='candle', style=mpf_style, volume=True, savefig=save_path)
+
+    fig, ax = plt.subplots()
+
+    ax.imshow(img, aspect='auto', extent=ax.get_xlim() + ax.get_ylim(), zorder=0)
+
+    mpf.plot(data_frame, ax=ax, type='candle', style=mpf_style, volume=True)
+
+    plt.savefig(save_path)
+    plt.close(fig)
+
     print(f"Chart saved to {save_path}")
 
 #endregion Ethereum Logic
