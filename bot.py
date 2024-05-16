@@ -10,7 +10,7 @@ from web3 import Web3
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from collections import deque, defaultdict
-from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
+from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot, ChatMember
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
 
 #
@@ -163,6 +163,7 @@ def help(update: Update, context: CallbackContext) -> None:
             '/contract /ca: These commands will provide you with the contract address for the SYPHER token.\n'
             '/tokenomics: This will provide you with information about the SYPHER token.\n'
             '/website: This will provide you with a link to the deSypher website.\n'
+            '/report: Use this by responding to a message to report the message to group admins.\n'
             '/price: This will provide you with the price of the SYPHER token in USD. Use 3 digit currency modifiers to get the price in other fiat currencies. Ex: "/price eur".\n'
             '/chart: This will reveal a price chart, and links to charting websites. Optional modifiers are "/chart d, h, m".\n'
         )
@@ -424,6 +425,18 @@ def website(update: Update, context: CallbackContext) -> None:
         )
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+
+def report(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+    message_id = update.message.reply_to_message.message_id if update.message.reply_to_message else update.message.message_id
+
+    report_message = f"Attention admins, a message has been reported: [Message link](https://t.me/c/{chat_id}/{message_id})"
+
+    for member in context.bot.get_chat_administrators(chat_id):
+        if member.status in ['creator', 'administrator']:
+            context.bot.send_message(chat_id=member.user.id, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+
+    update.message.reply_text("Thank you, the admins have been notified.")
 #endregion Main Slash Commands
 
 #region Ethereum Logic
@@ -952,6 +965,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("price", price))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
     dispatcher.add_handler(CommandHandler("website", website))
+    dispatcher.add_handler(CommandHandler("report", report))
     #endregion General Slash Command Handlers
 
     #region Admin Slash Command Handlers
