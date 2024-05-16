@@ -474,16 +474,15 @@ def get_token_price_in_fiat(contract_address, currency):
     return token_price_in_fiat
 
 def fetch_ohlcv_data():
-    now = datetime.now()
-    start_of_day = datetime(now.year, now.month, now.day)
-    start_of_day_timestamp = int(start_of_day.timestamp())
-    hours_since_start_of_day = (now - start_of_day).seconds // 3600
+    now = datetime.datetime.now()
+    one_hour_ago = now - datetime.timedelta(hours=1)
+    start_of_hour_timestamp = int(one_hour_ago.timestamp())
 
     url = "https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/day"
     params = {
-        'aggregate': '1h',
-        'before_timestamp': start_of_day_timestamp,
-        'limit': str(hours_since_start_of_day),
+        'aggregate': '1m',
+        'before_timestamp': start_of_hour_timestamp,
+        'limit': '60',  # Fetch only the last hour data
         'currency': 'usd'
     }
     response = requests.get(url, params=params)
@@ -497,10 +496,9 @@ ohlcv_data = fetch_ohlcv_data()
 # print(ohlcv_data)
 
 def prepare_data_for_chart(ohlcv_data):
-    # Create a list of dictionaries, one for each candlestick
     ohlcv_list = ohlcv_data['data']['attributes']['ohlcv_list']
     data = [{
-        'Date': pd.to_datetime(item[0], unit='s'),  # Convert UNIX timestamp to datetime
+        'Date': pd.to_datetime(item[0], unit='s'),
         'Open': item[1],
         'High': item[2],
         'Low': item[3],
@@ -508,9 +506,9 @@ def prepare_data_for_chart(ohlcv_data):
         'Volume': item[5]
     } for item in ohlcv_list]
 
-    # Create DataFrame
     data_frame = pd.DataFrame(data)
-    data_frame.set_index('Date', inplace=True)  # Set the datetime as the index
+    data_frame.sort_values('Date', inplace=True)  # Ensure data is sorted by date
+    data_frame.set_index('Date', inplace=True)
     return data_frame
 
 # Assuming `ohlcv_data` is fetched from the function `fetch_ohlcv_data()`
@@ -518,9 +516,8 @@ data_frame = prepare_data_for_chart(ohlcv_data)
 print(data_frame.head())  # Print first few rows to verify
 
 def plot_candlestick_chart(data_frame):
-    # Set the style and plot the chart
     mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
-    save_path = '/tmp/candlestick_chart.png'  # Use /tmp directory to save the chart
+    save_path = '/tmp/candlestick_chart.png'
     mpf.plot(data_frame, type='candle', style=mpf_style, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
 
