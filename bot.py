@@ -517,20 +517,21 @@ def plot_candlestick_chart(data_frame):
         volume='inherit'
     )
     s = mpf.make_mpf_style(
-        base_mpf_style='nightclouds',
         marketcolors=mc,
         rc={
             'font.size': 8,
-            'axes.labelcolor': '#2dc60e',
+            'axes.labelcolor': '#166009',
             'axes.edgecolor': '#0f3e07',
             'xtick.color': '#0f3e07',
             'ytick.color': '#0f3e07',
+            'grid.color': '#0f3e07',
+            'grid.linestyle': '--',
             'figure.facecolor': 'black',
             'axes.facecolor': 'black'
         }
     )
     save_path = '/tmp/candlestick_chart.png'
-    mpf.plot(data_frame, type='candle', style=s, volume=True, grid=False, savefig=save_path)
+    mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
 
 #endregion Ethereum Logic
