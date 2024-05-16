@@ -8,6 +8,7 @@ import pandas as pd
 import mplfinance as mpf
 from web3 import Web3
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 from collections import deque, defaultdict
 from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
@@ -473,12 +474,16 @@ def get_token_price_in_fiat(contract_address, currency):
     return token_price_in_fiat
 
 def fetch_ohlcv_data():
-    current_timestamp = int(time.time())  # Current time as Unix timestamp
+    now = datetime.now()
+    start_of_day = datetime(now.year, now.month, now.day)
+    start_of_day_timestamp = int(start_of_day.timestamp())
+    hours_since_start_of_day = (now - start_of_day).seconds // 3600
+
     url = "https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b/ohlcv/day"
     params = {
         'aggregate': '1h',
-        'before_timestamp': current_timestamp,
-        'limit': '100',
+        'before_timestamp': start_of_day_timestamp,
+        'limit': str(hours_since_start_of_day),
         'currency': 'usd'
     }
     response = requests.get(url, params=params)
@@ -548,9 +553,9 @@ def chart(update: Update, context: CallbackContext) -> None:
         if ohlcv_data:
             data_frame = prepare_data_for_chart(ohlcv_data)
             plot_candlestick_chart(data_frame)
-            update.message.reply_photo(photo=open('/tmp/candlestick_chart.png', 'rb'))
-            update.message.reply_text(
-                '[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
+            update.message.reply_photo(
+                photo=open('/tmp/candlestick_chart.png', 'rb'),
+                caption='[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
                 parse_mode='Markdown',
                 disable_web_page_preview=True
             )
