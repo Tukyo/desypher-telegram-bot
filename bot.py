@@ -134,8 +134,6 @@ class AntiRaid:
 anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
 anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
 
-sypherBot = Bot(token=TELEGRAM_TOKEN)
-
 RATE_LIMIT = 100  # Maximum number of allowed commands
 TIME_PERIOD = 60  # Time period in seconds
 last_check_time = time.time()
@@ -158,10 +156,16 @@ def help(update: Update, context: CallbackContext) -> None:
             '/start: This starts the bot, and sends a welcome message.\n'
             '/help: This is where you are now, you can see a list of commands here.\n'
             '/play: Start a mini-game of deSypher within Telegram. Have fun!\n'
+            '/endgame: This will end your current game.\n'
             '/tukyo: This will provide information about the developer of this bot, and deSypher.\n'
             '/tukyogames: This will provide information about Tukyo Games and our projects.\n'
             '/deSypher: This will direct you to the main game, you can play it using SYPHER tokens!\n'
             '/sypher: This command will provide you with information about the SYPHER token.\n'
+            '/contract /ca: These commands will provide you with the contract address for the SYPHER token.\n'
+            '/tokenomics: This will provide you with information about the SYPHER token.\n'
+            '/website: This will provide you with a link to the deSypher website.\n'
+            '/price: This will provide you with the price of the SYPHER token in USD. Use 3 digit currency modifiers to get the price in other fiat currencies. Ex: "/price eur".\n'
+            '/chart: This will reveal a price chart, and links to charting websites. Optional modifiers are "/chart d, h, m".\n'
         )
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
@@ -538,22 +542,6 @@ def plot_candlestick_chart(data_frame):
     save_path = '/tmp/candlestick_chart.png'
     mpf.plot(data_frame, type='candle', style=s, volume=True, title='SYPHER', savefig=save_path)
     print(f"Chart saved to {save_path}")
-
-def buy_listener(event):
-    to_address = event['args']['to']
-    value = web3.fromWei(event['args']['value'], 'ether')  # Converting from Wei to Ether
-    message = f"Address {to_address} bought {value} SYPHER!"
-    sypherBot.send_message(chat_id=CHAT_ID, text=message)
-    print(message)  # Optional: for logging
-
-# Event filter for Transfer events from the LP address
-event_filter = contract.events.Transfer.create_filter(fromBlock='latest', argument_filters={'from': lp_address})
-
-def log_loop(event_filter, poll_interval):
-    while True:
-        for event in event_filter.get_new_entries():
-            buy_listener(event)
-        time.sleep(poll_interval)
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
@@ -953,7 +941,6 @@ def main() -> None:
     
     #region General Slash Command Handlers
     dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help))
     dispatcher.add_handler(CommandHandler("play", play))
     dispatcher.add_handler(CommandHandler("endgame", end_game))
@@ -991,8 +978,6 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_game, pattern='^startGame$'))
-
-    log_loop(event_filter, 1)
     
     # Start the Bot
     updater.start_polling()
