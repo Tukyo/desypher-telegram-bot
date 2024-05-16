@@ -104,8 +104,8 @@ class AntiRaid:
 anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
 anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
 
-# Initialize a dictionary to keep track of user verification progress
 user_verification_progress = {}
+user_ids = {}
 
 #region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
@@ -359,6 +359,7 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
 def handle_new_user(update: Update, context: CallbackContext) -> None:
     for member in update.message.new_chat_members:
         user_id = member.id
+        user_ids[member.username] = user_id
         chat_id = update.message.chat.id
 
         # Mute the new user
@@ -637,7 +638,7 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
     chat_id = update.effective_chat.id
 
     if is_user_admin(update, context):
-        user_id = next((member.user.id for member in context.bot.get_chat_members(chat_id) if member.user.username == username), None)
+        user_id = user_ids.get(username)  # Look up the user ID in the dictionary
         if user_id is None:
             update.message.reply_text(f"User {username} not found.")
             return
