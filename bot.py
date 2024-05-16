@@ -665,17 +665,22 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             "✉️ · @tukyowave\n\n"
             "| Profectio\n"
             "🌐 · https://www.tukyowave.com/profectio/\n"
-            "🖼 · https://opensea.io/collection/profectio\n"
+            "🖼 · https://opensea.io/collection/profectio\n\n"
+            "To start verification, please click Initialize Bot, then send the bot a /start command in DM.\n\n"
+            "After initializing the bot, return to the main chat and click 'Click Here to Verify'."
         )
-        keyboard = [[InlineKeyboardButton("Initialize Bot", url=f"https://t.me/deSypher_bot?start={user_id}")]]
-        keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data='verify')]]
+
+        keyboard = [
+            [InlineKeyboardButton("Initialize Bot", url=f"https://t.me/deSypher_bot?start={user_id}")],
+            [InlineKeyboardButton("Click Here to Verify", callback_data='verify')]
+        ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(kick_user, 60, context={'chat_id': chat_id, 'user_id': user_id}, name=str(user_id))
+        job_queue.run_once(kick_user, 180, context={'chat_id': chat_id, 'user_id': user_id}, name=str(user_id))
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
@@ -684,6 +689,17 @@ def start_verification_dm(user_id: int, context: CallbackContext) -> None:
 
     message = context.bot.send_message(chat_id=user_id, text=verification_message, reply_markup=reply_markup)
     return message.message_id
+
+def verification_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    user_id = query.from_user.id
+    query.answer()
+
+    # Send a message to the user's DM to start the verification process
+    start_verification_dm(user_id, context)
+    
+    # Optionally, you can edit the original message to indicate the button was clicked
+    query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
 
 def generate_verification_buttons() -> InlineKeyboardMarkup:
     all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -797,17 +813,6 @@ def kick_user(context: CallbackContext) -> None:
         chat_id=job.context['chat_id'],
         text=f"User {job.context['user_id']} has been kicked for not verifying in time."
     )
-
-def button_callback(update: Update, context: CallbackContext) -> None:
-    query = update.callback_query
-    user_id = query.from_user.id
-    query.answer()
-
-    # Send a message to the user's DM to start the verification process
-    start_verification_dm(user_id, context)
-    
-    # Optionally, you can edit the original message to indicate the button was clicked
-    query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
 #endregion User Verification
 
 #region Admin Controls
@@ -1005,7 +1010,7 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
 
     # Register the callback query handler for button clicks
-    dispatcher.add_handler(CallbackQueryHandler(button_callback, pattern='^verify$'))
+    dispatcher.add_handler(CallbackQueryHandler(verification_callback, pattern='^verify$'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_game, pattern='^startGame$'))
