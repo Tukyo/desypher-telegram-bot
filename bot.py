@@ -3,10 +3,11 @@ import time
 import json
 import random
 import telegram
+from web3 import Web3
 from dotenv import load_dotenv
+from collections import deque, defaultdict
 from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
-from collections import deque, defaultdict
 
 #
 ## This bot was developed by Tukyo Games for the deSypher project.
@@ -23,12 +24,14 @@ from collections import deque, defaultdict
 ### /sypher - Information about the SYPHER token
 ### /contract /ca - Contract address for the SYPHER token
 ### /tokenomics - Information about the SYPHER token
+### /website - Link to the deSypher website
 #
 ## Admin Commands
 ### /cleargames - Clear all active games in the chat
 ### /antiraid - Manage the anti-raid system
 #### /antiraid end /anti-raid [user_amount] [time_out] [anti_raid_time]
-### /mute /unmute [username] - Toggle mute for a user
+### /mute /unmute - Reply to a message with this command to toggle mute for a user
+### /kick - Reply to a message with this command to kick a user from the chat
 #
 
 # Load environment variables from .env file
@@ -38,6 +41,14 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
 CHAT_ID = os.getenv('CHAT_ID')
+web3_provider_uri = os.getenv('ENDPOINT')
+
+web3 = Web3(Web3.HTTPProvider(web3_provider_uri))
+
+if web3.isConnected():
+    print("Connected to Ethereum node")
+else:
+    print("Failed to connect")
 
 #region Classes
 class AntiSpam:
@@ -348,9 +359,21 @@ def ca(update: Update, context: CallbackContext) -> None:
         '0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
     )
 
+def chart(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        '[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) - [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) - [CoinMarketCap](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) - [CoinGecko](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
+        parse_mode='Markdown',
+        disable_web_page_preview=True
+    )
+
 def whitepaper(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
     'Whitepaper: https://desypher.net/whitepaper.html\n'
+    )
+
+def website(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        'https://desypher.net/\n'
     )
 #endregion Slash Commands
 
@@ -654,6 +677,23 @@ def mute(update: Update, context: CallbackContext) -> None:
 
 def unmute(update: Update, context: CallbackContext) -> None:
     toggle_mute(update, context, False)
+
+def kick(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+
+    if is_user_admin(update, context):
+        reply_to_message = update.message.reply_to_message
+        if reply_to_message:
+            user_id = reply_to_message.from_user.id
+            username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
+        else:
+            update.message.reply_text("Please reply to a message from the user you want to kick.")
+            return
+
+        context.bot.kick_chat_member(chat_id=chat_id, user_id=user_id)
+        update.message.reply_text(f"User {username} has been kicked.")
+    else:
+        update.message.reply_text("You must be an admin to use this command.")
 #endregion Admin Slash Commands
 
 def main() -> None:
@@ -675,7 +715,9 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("sypher", sypher))
     dispatcher.add_handler(CommandHandler("contract", ca))
     dispatcher.add_handler(CommandHandler("ca", ca))
+    dispatcher.add_handler(CommandHandler("chart", chart))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
+    dispatcher.add_handler(CommandHandler("website", website))
     #endregion General Slash Command Handlers
 
     #region Admin Slash Command Handlers
@@ -683,6 +725,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     dispatcher.add_handler(CommandHandler("mute", mute))
     dispatcher.add_handler(CommandHandler("unmute", unmute))
+    dispatcher.add_handler(CommandHandler("kick", kick))
     #endregion Admin Slash Command Handlers
 
     # Register the message handler for guesses
