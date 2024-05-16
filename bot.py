@@ -7,7 +7,7 @@ import telegram
 import pandas as pd
 import mplfinance as mpf
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+from matplotlib.image import imread
 from web3 import Web3
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -69,8 +69,6 @@ else:
 
 # Create a contract instance
 contract = web3.eth.contract(address=contract_address, abi=abi)
-
-img = mpimg.imread('assets/chart-background.png')
 
 #region Classes
 class AntiSpam:
@@ -512,6 +510,8 @@ def prepare_data_for_chart(ohlcv_data):
     data_frame.set_index('Date', inplace=True)
     return data_frame
 
+
+
 def plot_candlestick_chart(data_frame):
     mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8, 'axes.facecolor':(1, 1, 1, 0.75)})
     save_path = '/tmp/candlestick_chart.png'
@@ -519,16 +519,16 @@ def plot_candlestick_chart(data_frame):
     fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, 
                              gridspec_kw={'height_ratios': [2, 1]})  # Create two subplots, one for the candlestick chart and one for the volume
 
-    # Set the background image with correct extent
-    axes[0].imshow(img, aspect='auto', extent=[data_frame.index[0], data_frame.index[-1], min(data_frame['Low']), max(data_frame['High'])], zorder=0)
-
     ap = mpf.make_addplot(data_frame['Volume'], panel=1, type='bar', color='g', alpha=0.75)
     mpf.plot(data_frame, addplot=ap, type='candle', style=mpf_style)  
+
+    # Add a logo at the top left of the chart
+    logo = imread('assets/logo.png')  # Replace 'logo.png' with the path to your logo
+    fig.figimage(logo, 0, fig.bbox.ymax, zorder=10)  # The second and third arguments are the x and y coordinates of the logo. The zorder argument sets the order in which elements are drawn on the plot.
 
     plt.savefig(save_path)
     plt.close(fig)
     print(f"Chart saved to {save_path}")
-
 
 #endregion Ethereum Logic
 
