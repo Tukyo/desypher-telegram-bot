@@ -442,9 +442,10 @@ def report(update: Update, context: CallbackContext) -> None:
         admin_mentions = ' '.join(admins)
 
         report_message = f"Reported Message to admins.\n {admin_mentions}\n"
-        message = context.bot.send_message(CHAT_ID, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+        # Send the message as plain text
+        message = context.bot.send_message(CHAT_ID, text=report_message, disable_web_page_preview=True)
 
-        # Immediately edit the message to remove the usernames
+        # Immediately edit the message to remove the usernames, using Markdown for the new message
         context.bot.edit_message_text(chat_id=CHAT_ID, message_id=message.message_id, text="⚠️ Reported Message to Admins ⚠️", parse_mode='Markdown', disable_web_page_preview=True)
     else:
         update.message.reply_text("This command can only be used in the main chat.")
