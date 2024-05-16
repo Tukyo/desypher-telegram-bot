@@ -436,6 +436,7 @@ def report(update: Update, context: CallbackContext) -> None:
     ]
 
     chat_id = update.effective_chat.id
+    CHAT_ID = int(os.getenv('CHAT_ID'))
 
     if chat_id == CHAT_ID:
         admin_mentions = ' '.join(admins)
