@@ -106,8 +106,10 @@ def play(update: Update, context: CallbackContext) -> None:
     keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='startGame')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    # Open the image file in binary mode
-    with open('/assets/banner.gif', 'rb') as photo:
+    base_dir = os.path.dirname(__file__)
+    photo_path = os.path.join(base_dir, 'assets', 'banner.gif')
+    
+    with open(photo_path, 'rb') as photo:
         context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
 
 def end_game(update: Update, context: CallbackContext) -> None:
