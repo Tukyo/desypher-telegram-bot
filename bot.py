@@ -91,9 +91,35 @@ def get_token_price_in_weth(contract_address):
         print(f"Error fetching token price from DexScreener: {e}")
         return None
     
-# Fetch and print the token price in WETH on startup
-token_price_in_weth = get_token_price_in_weth(contract_address)
-print(f"Current token price in WETH: {token_price_in_weth}")
+def get_weth_price_in_usd():
+    apiUrl = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    try:
+        response = requests.get(apiUrl)
+        response.raise_for_status()  # This will raise an exception for HTTP errors
+        data = response.json()
+        return data['ethereum']['usd']
+    except requests.RequestException as e:
+        print(f"Error fetching WETH price from CoinGecko: {e}")
+        return None
+    
+def get_token_price_in_usd(contract_address):
+    # Fetch price of token in WETH
+    token_price_in_weth = get_token_price_in_weth(contract_address)
+    if token_price_in_weth is None:
+        print("Could not retrieve token price in WETH.")
+        return None
+
+    # Fetch price of WETH in USD
+    weth_price_in_usd = get_weth_price_in_usd()
+    if weth_price_in_usd is None:
+        print("Could not retrieve WETH price in USD.")
+        return None
+
+    # Calculate token price in USD
+    token_price_in_usd = float(token_price_in_weth) * weth_price_in_usd
+    print(f"Price of the token in USD: {token_price_in_usd}")
+    return token_price_in_usd
+
 
 #region Classes
 class AntiSpam:
