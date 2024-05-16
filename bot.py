@@ -34,6 +34,9 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandle
 ### /kick - Reply to a message with this command to kick a user from the chat
 #
 
+with open('config.json') as f:
+    config = json.load(f)
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -44,12 +47,22 @@ CHAT_ID = os.getenv('CHAT_ID')
 web3_provider_uri = os.getenv('ENDPOINT')
 
 web3 = Web3(Web3.HTTPProvider(web3_provider_uri))
+contract_address = config['contractAddress']
+abi = config['abi']
 
 if web3.is_connected():
     network_id = web3.net.version
     print(f"Connected to Ethereum node on network {network_id}")
 else:
     print("Failed to connect")
+
+# Create a contract instance
+contract = web3.eth.contract(address=contract_address, abi=abi)
+
+# Call the totalSupply function
+total_supply = contract.functions.totalSupply().call()
+
+print(f"Total supply: {total_supply}")
 
 #region Classes
 class AntiSpam:
