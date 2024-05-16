@@ -105,7 +105,10 @@ def help(update: Update, context: CallbackContext) -> None:
 def play(update: Update, context: CallbackContext) -> None:
     keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='startGame')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
+    
+    # Open the image file in binary mode
+    with open('/assets/banner.gif', 'rb') as photo:
+        context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
 
 def end_game(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -156,7 +159,7 @@ def handle_start_game(update: Update, context: CallbackContext) -> None:
         game_layout = "\n".join([row_template for _ in range(num_rows)])
         
         # Update the message with the game layout and store the message ID
-        game_message = query.edit_message_text(text=f"*{first_name}'s Game*\nPlease guess a five letter word!\n{game_layout}", parse_mode='Markdown')
+        game_message = query.edit_message_text(text=f"*{first_name}'s Game*\nPlease guess a five letter word!\n\n{game_layout}", parse_mode='Markdown')
         context.chat_data[key]['game_message_id'] = game_message.message_id
         
         print(f"Game started for {first_name} in {chat_id} with message ID {game_message.message_id}")
@@ -180,7 +183,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     # Check if the guess is not 5 letters and the user has an active game
     if len(user_guess) != 5 or not user_guess.isalpha():
         print(f"Invalid guess length: {len(user_guess)}")
-        update.message.reply_text("Please guess a five-letter word using only letters!")
+        update.message.reply_text("Please guess a five letter word containing only letters!")
         return
 
     if 'guesses' not in context.chat_data[key]:
@@ -221,7 +224,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
     # Check if it's not the 4th guess and the user hasn't guessed the word correctly before sending the game message
     if len(context.chat_data[key]['guesses']) < 4 and user_guess != chosen_word:
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Game*\nPlease guess a five letter word!\n{game_layout}", parse_mode='Markdown')
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Game*\nPlease guess a five letter word!\n\n{game_layout}", parse_mode='Markdown')
     
         # Store the new message ID
         context.chat_data[key]['game_message_id'] = game_message.message_id
@@ -237,8 +240,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         # Update the game layout
         game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n{game_layout}\nCongratulations! You've guessed the word correctly!", parse_mode='Markdown')
-
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nCongratulations! You've guessed the word correctly!\n\nIf you enjoyed this, you can play the game with SYPHER tokens on the *[*website*](https://desypher.net/)*.", parse_mode='Markdown')
         print("User guessed the word correctly. Clearing game data.")
         del context.chat_data[key]
     elif len(context.chat_data[key]['guesses']) >= 4:
@@ -251,7 +253,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         # Update the game layout
         game_layout = get_game_layout(context.chat_data[key]['guesses'], chosen_word)
-        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n{game_layout}\nGame over! The correct word was: {chosen_word}", parse_mode='Markdown')
+        game_message = context.bot.send_message(chat_id=chat_id, text=f"*{player_name}'s Final Results:*\n\n{game_layout}\n\nGame over! The correct word was: {chosen_word}\n\nTry again on the *[*website*](https://desypher.net/)*, you'll probably have better luck if you play with SPYHER tokens.", parse_mode='Markdown')
 
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
