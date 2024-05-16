@@ -1,11 +1,9 @@
 import os
-import re
 import time
 import json
 import random
 import telegram
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
 from telegram import Update, ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, CallbackQueryHandler, JobQueue
 from collections import deque, defaultdict
@@ -107,48 +105,6 @@ anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
 anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
 
 user_verification_progress = {}
-
-#region Helper Definitions
-def parse_time_parameter(time_str: str) -> int:
-    time_str = time_str.lower()
-
-    time_multipliers = {
-        's': 1,
-        'm': 60,
-        'h': 60 * 60,
-        'd': 60 * 60 * 24,
-        'y': 60 * 60 * 24 * 365
-    }
-
-    time_regex = re.compile(r'(\d+)([smhdy])')
-    matches = time_regex.findall(time_str)
-
-    total_seconds = 0
-    for match in matches:
-        value, unit = match
-        total_seconds += int(value) * time_multipliers[unit]
-
-    return total_seconds
-
-def format_duration(seconds: int) -> str:
-    periods = [
-        ('year', 60*60*24*365),
-        ('month', 60*60*24*30),
-        ('day', 60*60*24),
-        ('hour', 60*60),
-        ('minute', 60),
-        ('second', 1)
-    ]
-
-    parts = []
-    for name, secs in periods:
-        value = seconds // secs
-        if value:
-            seconds -= value * secs
-            parts.append(f"{value} {name}{'s' if value > 1 else ''}")
-
-    return ', '.join(parts)
-#endregion Helper Definitions
 
 #region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
@@ -679,31 +635,17 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
             user_id = reply_to_message.from_user.id
             username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
         else:
-            update.message.reply_text("Please reply to a message from the user you want to mute or unmute. You may also set a duration for the mute using /mute y,d,h,m,s.")
+            update.message.reply_text("Please reply to a message from the user you want to mute or unmute.")
             return
-
-        until_date = None
-        if len(context.args) > 0:
-            time_parameter = context.args[0]
-            mute_duration = parse_time_parameter(time_parameter)
-            until_date = (datetime.now() + timedelta(seconds=mute_duration)).timestamp()
 
         context.bot.restrict_chat_member(
             chat_id=chat_id,
             user_id=user_id,
-            permissions=ChatPermissions(can_send_messages=not mute),
-            until_date=until_date
+            permissions=ChatPermissions(can_send_messages=not mute)
         )
 
         action = "muted" if mute else "unmuted"
-        mute_duration_str = "forever"
-        if until_date is not None:
-            mute_duration_str = format_duration(mute_duration)
-
-        if mute_duration_str != "forever":
-            update.message.reply_text(f"User {username} has been {action} for {mute_duration_str}.")
-        else:
-            update.message.reply_text(f"User {username} has been {action} forever.")
+        update.message.reply_text(f"User {username} has been {action}.")
     else:
         update.message.reply_text("You must be an admin to use this command.")
 
@@ -712,32 +654,6 @@ def mute(update: Update, context: CallbackContext) -> None:
 
 def unmute(update: Update, context: CallbackContext) -> None:
     toggle_mute(update, context, False)
-
-def mute_duration(update: Update, context: CallbackContext) -> None:
-    chat_id = update.effective_chat.id
-
-    if is_user_admin(update, context):
-        reply_to_message = update.message.reply_to_message
-        if reply_to_message:
-            user_id = reply_to_message.from_user.id
-            username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
-        else:
-            update.message.reply_text("Please reply to a message from the user you want to check the mute duration.")
-            return
-
-        chat_member = context.bot.get_chat_member(chat_id, user_id)
-        if chat_member.can_send_messages is False:
-            until_date = chat_member.until_date
-            if until_date is not None:
-                mute_duration = (until_date - datetime.now()).total_seconds()
-                mute_duration_str = format_duration(mute_duration)
-                update.message.reply_text(f"User {username} is muted for {mute_duration_str}.")
-            else:
-                update.message.reply_text(f"User {username} is muted forever.")
-        else:
-            update.message.reply_text(f"User {username} is not muted.")
-    else:
-        update.message.reply_text("You must be an admin to use this command.")
 #endregion Admin Slash Commands
 
 def main() -> None:
@@ -767,7 +683,6 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     dispatcher.add_handler(CommandHandler("mute", mute))
     dispatcher.add_handler(CommandHandler("unmute", unmute))
-    dispatcher.add_handler(CommandHandler("muteduration", mute_duration))
     #endregion Admin Slash Command Handlers
 
     # Register the message handler for guesses
