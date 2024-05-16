@@ -68,6 +68,14 @@ else:
 # Create a contract instance
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
+admins= [
+    '@tukyowave',
+    '@test',
+    '@bob',
+    '@sue',
+    '@george'
+]
+
 #region Classes
 class AntiSpam:
     def __init__(self, rate_limit, time_window, mute_time):
@@ -430,13 +438,14 @@ def report(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     message_id = update.message.reply_to_message.message_id if update.message.reply_to_message else update.message.message_id
 
-    report_message = f"Attention admins, a message has been reported: [Message link](https://t.me/c/{chat_id}/{message_id})"
+    # Create a string with all admin usernames
+    admin_mentions = ', '.join(admins)
 
-    for member in context.bot.get_chat_administrators(chat_id):
-        if member.status in ['creator', 'administrator']:
-            context.bot.send_message(chat_id=member.user.id, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+    report_message = f"Reported [message](https://t.me/c/{chat_id}/{message_id}) to admins: {admin_mentions}"
 
-    update.message.reply_text("Thank you, the admins have been notified.")
+    # Send the report notification in the chat
+    context.bot.send_message(chat_id=chat_id, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+
 #endregion Main Slash Commands
 
 #region Ethereum Logic
