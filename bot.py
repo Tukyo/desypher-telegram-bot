@@ -129,6 +129,25 @@ def parse_time_parameter(time_str: str) -> int:
         total_seconds += int(value) * time_multipliers[unit]
 
     return total_seconds
+
+def format_duration(seconds: int) -> str:
+    periods = [
+        ('year', 60*60*24*365),
+        ('month', 60*60*24*30),
+        ('day', 60*60*24),
+        ('hour', 60*60),
+        ('minute', 60),
+        ('second', 1)
+    ]
+
+    parts = []
+    for name, secs in periods:
+        value = seconds // secs
+        if value:
+            seconds -= value * secs
+            parts.append(f"{value} {name}{'s' if value > 1 else ''}")
+
+    return ', '.join(parts)
 #endregion Helper Definitions
 
 #region Slash Commands
@@ -677,7 +696,11 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
         )
 
         action = "muted" if mute else "unmuted"
-        update.message.reply_text(f"User {username} has been {action}.")
+        mute_duration_str = "forever"
+        if until_date is not None:
+            mute_duration_str = format_duration(mute_duration)
+
+        update.message.reply_text(f"User {username} has been {action} for {mute_duration_str}.")
     else:
         update.message.reply_text("You must be an admin to use this command.")
 
@@ -686,6 +709,32 @@ def mute(update: Update, context: CallbackContext) -> None:
 
 def unmute(update: Update, context: CallbackContext) -> None:
     toggle_mute(update, context, False)
+
+def mute_duration(update: Update, context: CallbackContext) -> None:
+    chat_id = update.effective_chat.id
+
+    if is_user_admin(update, context):
+        reply_to_message = update.message.reply_to_message
+        if reply_to_message:
+            user_id = reply_to_message.from_user.id
+            username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
+        else:
+            update.message.reply_text("Please reply to a message from the user you want to check the mute duration.")
+            return
+
+        chat_member = context.bot.get_chat_member(chat_id, user_id)
+        if chat_member.can_send_messages is False:
+            until_date = chat_member.until_date
+            if until_date is not None:
+                mute_duration = (until_date - datetime.now()).total_seconds()
+                mute_duration_str = format_duration(mute_duration)
+                update.message.reply_text(f"User {username} is muted for {mute_duration_str}.")
+            else:
+                update.message.reply_text(f"User {username} is muted forever.")
+        else:
+            update.message.reply_text(f"User {username} is not muted.")
+    else:
+        update.message.reply_text("You must be an admin to use this command.")
 #endregion Admin Slash Commands
 
 def main() -> None:
@@ -715,6 +764,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     dispatcher.add_handler(CommandHandler("mute", mute))
     dispatcher.add_handler(CommandHandler("unmute", unmute))
+    dispatcher.add_handler(CommandHandler("mute_duration", mute_duration))
     #endregion Admin Slash Command Handlers
 
     # Register the message handler for guesses
