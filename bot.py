@@ -436,18 +436,13 @@ def website(update: Update, context: CallbackContext) -> None:
 
 def report(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
-    message_id = update.message.reply_to_message.message_id if update.message.reply_to_message else update.message.message_id
+    if (chat_id == CHAT_ID):
+        admin_mentions = ', '.join(admins)
 
-    # Remove the '-100' prefix from the chat_id for supergroups
-    group_id = str(chat_id)[4:] if str(chat_id).startswith('-100') else str(chat_id)
-
-    # Create a string with all admin usernames
-    admin_mentions = ', '.join(admins)
-
-    report_message = f"Reported [message](https://t.me/c/{group_id}/{message_id}) to admins.\n {admin_mentions}\n"
-
-    # Send the report notification in the chat
-    context.bot.send_message(chat_id=chat_id, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+        report_message = f"Reported Message to admins.\n {admin_mentions}\n"
+        context.bot.send_message(CHAT_ID, text=report_message, parse_mode='Markdown', disable_web_page_preview=True)
+    else:
+        update.message.reply_text("This command can only be used in the main chat.")
 
 #endregion Main Slash Commands
 
