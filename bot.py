@@ -513,23 +513,20 @@ def prepare_data_for_chart(ohlcv_data):
     return data_frame
 
 def plot_candlestick_chart(data_frame):
-    mpf_style = mpf.make_mpf_style(
-        base_mpf_style='charles',
-        rc={'font.size': 8}
-        )
-    
+    mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
     save_path = '/tmp/candlestick_chart.png'
 
     fig, ax = plt.subplots()
 
-    ax.imshow(img, aspect='auto', extent=ax.get_xlim() + ax.get_ylim(), zorder=0)
+    # Set the background image with correct extent
+    ax.imshow(img, aspect='auto', extent=[data_frame.index[0], data_frame.index[-1], min(data_frame['Low']), max(data_frame['High'])], zorder=0)
 
     mpf.plot(data_frame, ax=ax, type='candle', style=mpf_style, volume=True)
 
     plt.savefig(save_path)
     plt.close(fig)
-
     print(f"Chart saved to {save_path}")
+
 
 #endregion Ethereum Logic
 
