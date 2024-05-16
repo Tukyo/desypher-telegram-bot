@@ -428,11 +428,11 @@ def website(update: Update, context: CallbackContext) -> None:
 
 def report(update: Update, context: CallbackContext) -> None:
     admins= [
-        '@tukyowave',
-        '@jetLunar',
-        '@pr0satoshi',
-        '@dzhv_bradbrown',
-        '@motorgala'
+        '%40tukyowave',
+        '%40jetLunar',
+        '%40pr0satoshi',
+        '%40dzhv_bradbrown',
+        '%40motorgala'
     ]
 
     chat_id = update.effective_chat.id
