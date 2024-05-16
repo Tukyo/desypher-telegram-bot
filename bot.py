@@ -105,7 +105,6 @@ anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
 anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
 
 user_verification_progress = {}
-user_ids = {}
 
 #region Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
@@ -359,8 +358,6 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
 def handle_new_user(update: Update, context: CallbackContext) -> None:
     for member in update.message.new_chat_members:
         user_id = member.id
-        user_ids[member.username] = user_id
-        print(f"New user joined, username {member.username} added to the user_ids dictionary.")
         chat_id = update.message.chat.id
 
         # Mute the new user
@@ -630,18 +627,15 @@ def antiraid(update: Update, context: CallbackContext) -> None:
         print(f"User {update.effective_user.id} tried to use /antiraid but is not an admin in chat {update.effective_chat.id}.")
 
 def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
-    args = context.args
-    if not args:
-        update.message.reply_text("Usage: /mute [username] or /unmute [username]")
-        return
-
-    username = args[0]
     chat_id = update.effective_chat.id
 
     if is_user_admin(update, context):
-        user_id = user_ids.get(username)  # Look up the user ID in the dictionary
-        if user_id is None:
-            update.message.reply_text(f"User {username} not found.")
+        reply_to_message = update.message.reply_to_message
+        if reply_to_message:
+            user_id = reply_to_message.from_user.id
+            username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
+        else:
+            update.message.reply_text("Please reply to a message from the user you want to mute or unmute.")
             return
 
         context.bot.restrict_chat_member(
