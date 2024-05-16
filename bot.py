@@ -474,7 +474,7 @@ def get_token_price_in_fiat(contract_address, currency):
     return token_price_in_fiat
 
 def fetch_ohlcv_data():
-    now = datetime.datetime.now()
+    now = datetime.now()
     one_hour_ago = now - datetime.timedelta(hours=1)
     start_of_hour_timestamp = int(one_hour_ago.timestamp())
 
