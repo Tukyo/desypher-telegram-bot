@@ -504,13 +504,23 @@ def prepare_data_for_chart(ohlcv_data):
     } for item in ohlcv_list]
 
     # Create DataFrame
-    df = pd.DataFrame(data)
-    df.set_index('Date', inplace=True)  # Set the datetime as the index
-    return df
+    data_frame = pd.DataFrame(data)
+    data_frame.set_index('Date', inplace=True)  # Set the datetime as the index
+    return data_frame
 
 # Assuming `ohlcv_data` is fetched from the function `fetch_ohlcv_data()`
-df = prepare_data_for_chart(ohlcv_data)
-print(df.head())  # Print first few rows to verify
+data_frame = prepare_data_for_chart(ohlcv_data)
+print(data_frame.head())  # Print first few rows to verify
+
+def plot_candlestick_chart(data_frame):
+    # Set the style and plot the chart
+    mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
+    save_path = '/candlestick_chart.png'  # Define the path to save the chart
+    mpf.plot(data_frame, type='candle', style=mpf_style, volume=True, savefig=save_path)
+    print(f"Chart saved to {save_path}")
+
+plot_candlestick_chart(data_frame)
+
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
