@@ -556,8 +556,7 @@ def chart(update: Update, context: CallbackContext) -> None:
             update.message.reply_photo(
                 photo=open('/tmp/candlestick_chart.png', 'rb'),
                 caption='[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
-                parse_mode='Markdown',
-                disable_web_page_preview=True
+                parse_mode='Markdown'
             )
         else:
             update.message.reply_text('Failed to fetch data or generate chart. Please try again later.')
