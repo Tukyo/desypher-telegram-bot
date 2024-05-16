@@ -27,6 +27,10 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandle
 ### /tokenomics - Information about the SYPHER token
 ### /website - Link to the deSypher website
 #
+## Ethereum Commands
+### /price - Get the price of the SYPHER token in USD
+### /chart - Links to the token chart on various platforms
+#
 ## Admin Commands
 ### /cleargames - Clear all active games in the chat
 ### /antiraid - Manage the anti-raid system
@@ -45,10 +49,10 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
 CHAT_ID = os.getenv('CHAT_ID')
-web3_provider_uri = os.getenv('ENDPOINT')
-basescan_api_key = os.getenv('BASESCAN_API')
+BASE_ENDPOINT = os.getenv('ENDPOINT')
+BASESCAN_API_KEY = os.getenv('BASESCAN_API')
 
-web3 = Web3(Web3.HTTPProvider(web3_provider_uri))
+web3 = Web3(Web3.HTTPProvider(BASE_ENDPOINT))
 contract_address = config['contractAddress']
 abi = config['abi']
 
@@ -60,70 +64,6 @@ else:
 
 # Create a contract instance
 contract = web3.eth.contract(address=contract_address, abi=abi)
-
-# Call the totalSupply function
-total_supply = contract.functions.totalSupply().call()
-
-print(f"Total supply: {total_supply}")
-
-def get_token_price_in_weth(contract_address):
-    apiUrl = f"https://api.dexscreener.com/latest/dex/tokens/{contract_address}"
-    try:
-        response = requests.get(apiUrl)
-        response.raise_for_status()
-        data = response.json()
-        
-        if data['pairs'] and len(data['pairs']) > 0:
-            # Find the pair with WETH as the quote token
-            weth_pair = next((pair for pair in data['pairs'] if pair['quoteToken']['symbol'] == 'WETH'), None)
-            
-            if weth_pair:
-                price_in_weth = weth_pair['priceNative']
-                print(f"Price of the token in WETH: {price_in_weth}")
-                return price_in_weth
-            else:
-                print("No WETH pair found for this token.")
-                return None
-        else:
-            print("No pairs found for this token.")
-            return None
-    except requests.RequestException as e:
-        print(f"Error fetching token price from DexScreener: {e}")
-        return None
-    
-def get_weth_price_in_usd():
-    apiUrl = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-    try:
-        response = requests.get(apiUrl)
-        response.raise_for_status()  # This will raise an exception for HTTP errors
-        data = response.json()
-        return data['ethereum']['usd']
-    except requests.RequestException as e:
-        print(f"Error fetching WETH price from CoinGecko: {e}")
-        return None
-    
-def get_token_price_in_usd(contract_address):
-    # Fetch price of token in WETH
-    token_price_in_weth = get_token_price_in_weth(contract_address)
-    if token_price_in_weth is None:
-        print("Could not retrieve token price in WETH.")
-        return None
-
-    # Fetch price of WETH in USD
-    weth_price_in_usd = get_weth_price_in_usd()
-    if weth_price_in_usd is None:
-        print("Could not retrieve WETH price in USD.")
-        return None
-
-    # Calculate token price in USD
-    token_price_in_usd = float(token_price_in_weth) * weth_price_in_usd
-    return token_price_in_usd
-
-token_price_in_usd = get_token_price_in_usd(contract_address)
-if token_price_in_usd is not None:
-    print(f"The price of the token in USD is: {token_price_in_usd}")
-else:
-    print("Failed to retrieve the price of the token in USD.")
 
 #region Classes
 class AntiSpam:
@@ -192,7 +132,7 @@ anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
 
 user_verification_progress = {}
 
-#region Slash Commands
+#region Main Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Hello! I am the deSypher Bot. For a list of commands, please use /help.')
 
@@ -434,13 +374,6 @@ def ca(update: Update, context: CallbackContext) -> None:
         '0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
     )
 
-def chart(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text(
-        '[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) - [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) - [CoinMarketCap](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) - [CoinGecko](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
-        parse_mode='Markdown',
-        disable_web_page_preview=True
-    )
-
 def whitepaper(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
     'Whitepaper: https://desypher.net/whitepaper.html\n'
@@ -450,7 +383,7 @@ def website(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         'https://desypher.net/\n'
     )
-#endregion Slash Commands
+#endregion Main Slash Commands
 
 #region User Verification
 def handle_new_user(update: Update, context: CallbackContext) -> None:
@@ -635,6 +568,77 @@ def button_callback(update: Update, context: CallbackContext) -> None:
     query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
 #endregion User Verification
 
+#region Ethereum Logic
+def get_token_price_in_weth(contract_address):
+    apiUrl = f"https://api.dexscreener.com/latest/dex/tokens/{contract_address}"
+    try:
+        response = requests.get(apiUrl)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data['pairs'] and len(data['pairs']) > 0:
+            # Find the pair with WETH as the quote token
+            weth_pair = next((pair for pair in data['pairs'] if pair['quoteToken']['symbol'] == 'WETH'), None)
+            
+            if weth_pair:
+                price_in_weth = weth_pair['priceNative']
+                print(f"Price of the token in WETH: {price_in_weth}")
+                return price_in_weth
+            else:
+                print("No WETH pair found for this token.")
+                return None
+        else:
+            print("No pairs found for this token.")
+            return None
+    except requests.RequestException as e:
+        print(f"Error fetching token price from DexScreener: {e}")
+        return None
+    
+def get_weth_price_in_usd():
+    apiUrl = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    try:
+        response = requests.get(apiUrl)
+        response.raise_for_status()  # This will raise an exception for HTTP errors
+        data = response.json()
+        return data['ethereum']['usd']
+    except requests.RequestException as e:
+        print(f"Error fetching WETH price from CoinGecko: {e}")
+        return None
+    
+def get_token_price_in_usd(contract_address):
+    # Fetch price of token in WETH
+    token_price_in_weth = get_token_price_in_weth(contract_address)
+    if token_price_in_weth is None:
+        print("Could not retrieve token price in WETH.")
+        return None
+
+    # Fetch price of WETH in USD
+    weth_price_in_usd = get_weth_price_in_usd()
+    if weth_price_in_usd is None:
+        print("Could not retrieve WETH price in USD.")
+        return None
+
+    # Calculate token price in USD
+    token_price_in_usd = float(token_price_in_weth) * weth_price_in_usd
+    return token_price_in_usd
+#endregion Ethereum Logic
+
+#region Ethereum Slash Commands
+def price(update: Update, context: CallbackContext) -> None:
+    token_price_in_usd = get_token_price_in_usd(contract_address)
+    if token_price_in_usd is not None:
+        update.message.reply_text(f"SYPHER: ${token_price_in_usd}")
+    else:
+        update.message.reply_text("Failed to retrieve the price of the token in USD.")
+
+def chart(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        '[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) - [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) - [CoinMarketCap](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) - [CoinGecko](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
+        parse_mode='Markdown',
+        disable_web_page_preview=True
+    )
+#endregion Ethereum Slash Commands
+
 #region Admin Controls
 def unmute_user(context: CallbackContext) -> None:
     job = context.job
@@ -791,6 +795,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("contract", ca))
     dispatcher.add_handler(CommandHandler("ca", ca))
     dispatcher.add_handler(CommandHandler("chart", chart))
+    dispatcher.add_handler(CommandHandler("price", price))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
     dispatcher.add_handler(CommandHandler("website", website))
     #endregion General Slash Command Handlers
