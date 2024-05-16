@@ -513,7 +513,7 @@ def prepare_data_for_chart(ohlcv_data):
     return data_frame
 
 def plot_candlestick_chart(data_frame):
-    mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8})
+    mpf_style = mpf.make_mpf_style(base_mpf_style='charles', rc={'font.size': 8, 'axes.facecolor':(1, 1, 1, 0.75)})
     save_path = '/tmp/candlestick_chart.png'
 
     fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, 
@@ -523,7 +523,7 @@ def plot_candlestick_chart(data_frame):
     axes[0].imshow(img, aspect='auto', extent=[data_frame.index[0], data_frame.index[-1], min(data_frame['Low']), max(data_frame['High'])], zorder=0)
 
     ap = mpf.make_addplot(data_frame['Volume'], panel=1, type='bar', color='g', alpha=0.75)
-    mpf.plot(data_frame, addplot=ap, type='candle', style=mpf_style, alpha=0.75)  
+    mpf.plot(data_frame, addplot=ap, type='candle', style=mpf_style)  
 
     plt.savefig(save_path)
     plt.close(fig)
