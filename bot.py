@@ -117,9 +117,13 @@ def get_token_price_in_usd(contract_address):
 
     # Calculate token price in USD
     token_price_in_usd = float(token_price_in_weth) * weth_price_in_usd
-    print(f"Price of the token in USD: {token_price_in_usd}")
     return token_price_in_usd
 
+token_price_in_usd = get_token_price_in_usd(contract_address)
+if token_price_in_usd is not None:
+    print(f"The price of the token in USD is: {token_price_in_usd}")
+else:
+    print("Failed to retrieve the price of the token in USD.")
 
 #region Classes
 class AntiSpam:
