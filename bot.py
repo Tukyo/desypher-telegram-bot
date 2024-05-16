@@ -2,6 +2,7 @@ import os
 import time
 import json
 import random
+import requests
 import telegram
 from web3 import Web3
 from dotenv import load_dotenv
@@ -45,6 +46,7 @@ TELEGRAM_TOKEN = os.getenv('BOT_API_TOKEN')
 VERIFICATION_LETTERS = os.getenv('VERIFICATION_LETTERS')
 CHAT_ID = os.getenv('CHAT_ID')
 web3_provider_uri = os.getenv('ENDPOINT')
+basescan_api_key = os.getenv('BASESCAN_API')
 
 web3 = Web3(Web3.HTTPProvider(web3_provider_uri))
 contract_address = config['contractAddress']
@@ -63,6 +65,22 @@ contract = web3.eth.contract(address=contract_address, abi=abi)
 total_supply = contract.functions.totalSupply().call()
 
 print(f"Total supply: {total_supply}")
+
+def fetch_total_holders(contract_address, basescan_api_key):
+    # URL for getting token holder count
+    url = f"https://api.basescan.io/api?module=token&action=tokenholderlist&contractaddress={contract_address}&apikey={basescan_api_key}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Will raise an HTTPError for bad requests (4XX or 5XX)
+        data = response.json()
+        # Assuming 'result' contains the list of holders and their info
+        return len(data['result'])  # Return the count of holders
+    except requests.RequestException as e:
+        print(f"Error fetching data: {e}")
+        return 0
+    
+total_holders = fetch_total_holders(contract_address, basescan_api_key)
+print(f"Total holders of the contract: {total_holders}")
 
 #region Classes
 class AntiSpam:
