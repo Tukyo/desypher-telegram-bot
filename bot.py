@@ -171,14 +171,17 @@ def help(update: Update, context: CallbackContext) -> None:
 
 #region Play Game
 def play(update: Update, context: CallbackContext) -> None:
-    keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='startGame')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    base_dir = os.path.dirname(__file__)
-    photo_path = os.path.join(base_dir, 'assets', 'banner.gif')
-    
-    with open(photo_path, 'rb') as photo:
-        context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
+    if rate_limit_check():
+        keyboard = [[InlineKeyboardButton("Click Here to Start a Game!", callback_data='startGame')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        base_dir = os.path.dirname(__file__)
+        photo_path = os.path.join(base_dir, 'assets', 'banner.gif')
+        
+        with open(photo_path, 'rb') as photo:
+            context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption='Welcome to deSypher! Click the button below to start a game!', reply_markup=reply_markup)
+    else:
+        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
 def end_game(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -244,6 +247,11 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
     key = f"{chat_id}_{user_id}"
+
+    if key not in context.chat_data:
+        # No active game found for key
+        return
+    
     player_name = context.chat_data[key].get('player_name', 'Player')
 
     # print(f"User {user_id} in chat {chat_id} guessed: {update.message.text}")
@@ -446,7 +454,7 @@ def report(update: Update, context: CallbackContext) -> None:
         message = context.bot.send_message(CHAT_ID, text=report_message, disable_web_page_preview=True)
 
         # Immediately edit the message to remove the usernames, using Markdown for the new message
-        context.bot.edit_message_text(chat_id=CHAT_ID, message_id=message.message_id, text="⚠️ Reported Message to Admins ⚠️", parse_mode='Markdown', disable_web_page_preview=True)
+        context.bot.edit_message_text(chat_id=CHAT_ID, message_id=message.message_id, text="⚠️ Message Reported to Admins ⚠️", parse_mode='Markdown', disable_web_page_preview=True)
     else:
         update.message.reply_text("This command can only be used in the main chat.")
 #endregion Main Slash Commands
@@ -659,7 +667,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             "🌐 · https://www.tukyowave.com/profectio/\n"
             "🖼 · https://opensea.io/collection/profectio\n"
         )
-
+        keyboard = [[InlineKeyboardButton("Initialize Bot", url=f"https://t.me/deSypher_bot?start={user_id}")]]
         keyboard = [[InlineKeyboardButton("Click Here to Verify", callback_data='verify')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
