@@ -58,7 +58,6 @@ BASESCAN_API_KEY = os.getenv('BASESCAN_API')
 web3 = Web3(Web3.HTTPProvider(BASE_ENDPOINT))
 contract_address = config['contractAddress']
 abi = config['abi']
-lp_address = config['lpAddress']
 
 if web3.is_connected():
     network_id = web3.net.version
@@ -527,8 +526,6 @@ def plot_candlestick_chart(data_frame):
         marketcolors=mc,
         rc={
             'font.size': 8,
-            'axes.titlesize': 'small',
-            'axes.titleweight': 'bold',
             'axes.labelcolor': '#2dc60e',
             'axes.edgecolor': '#2dc60e',
             'xtick.color': '#2dc60e',
@@ -540,8 +537,9 @@ def plot_candlestick_chart(data_frame):
         }
     )
     save_path = '/tmp/candlestick_chart.png'
-    mpf.plot(data_frame, type='candle', style=s, volume=True, title='SYPHER', savefig=save_path)
+    mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
+
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
