@@ -4,6 +4,8 @@ import json
 import random
 import requests
 import telegram
+import pandas as pd
+import mplfinance as mpf
 from web3 import Web3
 from dotenv import load_dotenv
 from collections import deque, defaultdict
@@ -487,7 +489,28 @@ def fetch_ohlcv_data():
         return None
 
 ohlcv_data = fetch_ohlcv_data()
-print(ohlcv_data)
+# print(ohlcv_data)
+
+def prepare_data_for_chart(ohlcv_data):
+    # Create a list of dictionaries, one for each candlestick
+    ohlcv_list = ohlcv_data['data']['attributes']['ohlcv_list']
+    data = [{
+        'Date': pd.to_datetime(item[0], unit='s'),  # Convert UNIX timestamp to datetime
+        'Open': item[1],
+        'High': item[2],
+        'Low': item[3],
+        'Close': item[4],
+        'Volume': item[5]
+    } for item in ohlcv_list]
+
+    # Create DataFrame
+    df = pd.DataFrame(data)
+    df.set_index('Date', inplace=True)  # Set the datetime as the index
+    return df
+
+# Assuming `ohlcv_data` is fetched from the function `fetch_ohlcv_data()`
+df = prepare_data_for_chart(ohlcv_data)
+print(df.head())  # Print first few rows to verify
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
