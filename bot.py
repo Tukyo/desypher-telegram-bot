@@ -522,8 +522,8 @@ def plot_candlestick_chart(data_frame):
     # Set the background image with correct extent
     axes[0].imshow(img, aspect='auto', extent=[data_frame.index[0], data_frame.index[-1], min(data_frame['Low']), max(data_frame['High'])], zorder=0)
 
-    ap = mpf.make_addplot(data_frame['Volume'], panel=1, type='bar', color='g')  # Create an addplot object for the volume
-    mpf.plot(data_frame, addplot=ap, type='candle', style=mpf_style)  # Pass the addplot object to the mpf.plot() function
+    ap = mpf.make_addplot(data_frame['Volume'], panel=1, type='bar', color='g', alpha=0.75)
+    mpf.plot(data_frame, addplot=ap, type='candle', style=mpf_style, alpha=0.75)  
 
     plt.savefig(save_path)
     plt.close(fig)
