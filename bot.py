@@ -58,6 +58,7 @@ BASESCAN_API_KEY = os.getenv('BASESCAN_API')
 web3 = Web3(Web3.HTTPProvider(BASE_ENDPOINT))
 contract_address = config['contractAddress']
 abi = config['abi']
+pool_address = config['lpAddress']
 
 if web3.is_connected():
     network_id = web3.net.version
@@ -512,6 +513,18 @@ def get_token_price_in_fiat(contract_address, currency):
     token_price_in_fiat = float(token_price_in_weth) * weth_price_in_fiat
     return token_price_in_fiat
 
+def get_liquidity():
+    try:
+        response = requests.get("https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b")
+        response.raise_for_status()
+        data = response.json()
+        # Navigate the JSON to find the liquidity in USD
+        liquidity_usd = data['data']['attributes']['reserve_in_usd']
+        return liquidity_usd
+    except requests.RequestException as e:
+        print(f"Failed to fetch liquidity data: {str(e)}")
+        return None
+
 def fetch_ohlcv_data(time_frame):
     now = datetime.now()
     one_hour_ago = now - timedelta(hours=1)
@@ -592,6 +605,16 @@ def price(update: Update, context: CallbackContext) -> None:
             update.message.reply_text(f"SYPHER • {currency.upper()}: {formatted_price}")
         else:
             update.message.reply_text(f"Failed to retrieve the price of the token in {currency.upper()}.")
+    else:
+        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+
+def liquidity(update: Update, context: CallbackContext) -> None:
+    if rate_limit_check():
+        liquidity_usd = get_liquidity()
+        if liquidity_usd:
+            update.message.reply_text(f"Liquidity: ${liquidity_usd}")
+        else:
+            update.message.reply_text("Failed to fetch liquidity data.")
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
@@ -983,6 +1006,9 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("ca", ca))
     dispatcher.add_handler(CommandHandler("chart", chart))
     dispatcher.add_handler(CommandHandler("price", price))
+    dispatcher.add_handler(CommandHandler("liquidity", liquidity))
+    dispatcher.add_handler(CommandHandler("lp", liquidity))
+    dispatcher.add_handler(CommandHandler("volume", volume))
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
     dispatcher.add_handler(CommandHandler("website", website))
     dispatcher.add_handler(CommandHandler("report", report))
