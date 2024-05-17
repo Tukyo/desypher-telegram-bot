@@ -734,6 +734,7 @@ def handle_transfer_event(event):
     from_address = event['args']['from']
     to_address = event['args']['to']
     amount = event['args']['value']
+    transaction_hash = event['transactionHash'].hex()
     
     # Check if the transfer is from the LP address
     if from_address.lower() == pool_address.lower():
@@ -752,7 +753,7 @@ def handle_transfer_event(event):
             header_emoji, buyer_emoji = "💸", "🐟"  # Default to Fish if unable to determine price
 
         # Format message with Markdown
-        message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message} \n\n[{to_address}](https://basescan.org/address/{to_address})"
+        message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message} \n\n[Address](https://basescan.org/address/{to_address} • [Transaction](https://basescan.org/tx/{transaction_hash})"
         print(message)  # Debugging
 
         message = escape_md_v2(message)
