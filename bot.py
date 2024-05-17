@@ -29,10 +29,13 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandle
 ### /contract /ca - Contract address for the SYPHER token
 ### /tokenomics - Information about the SYPHER token
 ### /website - Link to the deSypher website
+### /report - Report a message to group admins
 #
 ## Ethereum Commands
 ### /price - Get the price of the SYPHER token in USD
 ### /chart - Links to the token chart on various platforms
+### /liquidity /lp - View the liquidity value of the SYPHER V3 pool
+### /volume - 24-hour trading volume of the SYPHER token
 #
 ## Admin Commands
 ### /cleargames - Clear all active games in the chat
@@ -157,15 +160,17 @@ def help(update: Update, context: CallbackContext) -> None:
             '/help: This is where you are now, you can see a list of commands here.\n'
             '/play: Start a mini-game of deSypher within Telegram. Have fun!\n'
             '/endgame: This will end your current game.\n'
-            '/tukyo: This will provide information about the developer of this bot, and deSypher.\n'
+            '/tukyo: The developer of this bot, and deSypher.\n'
             '/tukyogames: This will provide information about Tukyo Games and our projects.\n'
             '/deSypher: This will direct you to the main game, you can play it using SYPHER tokens!\n'
             '/sypher /tokenomics: These commands will provide you with information about the SYPHER token.\n'
-            '/contract /ca: These commands will provide you with the contract address for the SYPHER token.\n'
+            '/contract /ca: These commands will show you the contract address for the SYPHER token.\n'
             '/website: This will provide you with a link to the deSypher website.\n'
-            '/report: Use this by responding to a message to report the message to group admins.\n'
-            '/price: This will provide you with the price of the SYPHER token in USD. Use 3 digit currency modifiers to get the price in other fiat currencies. Ex: "/price eur".\n'
+            '/report: Respond to a message with this command to report it to group admins.\n'
+            '/price: Price of the SYPHER token in USD. Use 3 digit currency modifiers to get the price in other fiat currencies. Ex: "/price eur".\n'
             '/chart: This will reveal a price chart, and links to charting websites. Optional modifiers are "/chart d, h, m".\n'
+            '/liquidity /lp: View the liquidity value of the SYPHER V3 pool.\n'
+            '/volume: 24-hour trading volume of the SYPHER token.\n'
         )
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
@@ -902,9 +907,7 @@ def rate_limit_check():
         return True
     else:
         return False
-#endregion Admin Controls
 
-#region Admin Slash Commands
 def is_user_admin(update: Update, context: CallbackContext) -> bool:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
@@ -914,6 +917,19 @@ def is_user_admin(update: Update, context: CallbackContext) -> bool:
     user_is_admin = any(admin.user.id == user_id for admin in chat_admins)
 
     return user_is_admin
+#endregion Admin Controls
+
+#region Admin Slash Commands
+def admin_help(update: Update, context: CallbackContext) -> None:
+    if is_user_admin(update, context):
+        update.message.reply_text(
+            "Admin commands:\n"
+            "/cleargames - Clear all active games\n"
+            "/antiraid - Manage anti-raid settings\n"
+            "/mute - Mute a user\n"
+            "/unmute - Unmute a user\n"
+            "/kick - Kick a user\n"
+        )
 
 def cleargames(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -1061,8 +1077,6 @@ def main() -> None:
     
     # Start the Bot
     updater.start_polling()
-    
-    # Run the bot until you press Ctrl-C
     updater.idle()
 
 if __name__ == '__main__':
