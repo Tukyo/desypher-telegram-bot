@@ -138,7 +138,7 @@ class AntiRaid:
 #endregion Classes
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
-anti_raid = AntiRaid(user_amount=20, time_out=30, anti_raid_time=180)
+anti_raid = AntiRaid(user_amount=2, time_out=30, anti_raid_time=180)
 
 RATE_LIMIT = 100  # Maximum number of allowed commands
 TIME_PERIOD = 60  # Time period in seconds
@@ -271,8 +271,6 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     
     player_name = context.chat_data[key].get('player_name', 'Player')
 
-    # print(f"User {user_id} in chat {chat_id} guessed: {update.message.text}")
-
     # Check if there's an ongoing game for this user in this chat
     if key not in context.chat_data or 'chosen_word' not in context.chat_data[key]:
         # print(f"No active game found for key: {key}")
@@ -284,7 +282,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     # Check if the guess is not 5 letters and the user has an active game
     if len(user_guess) != 5 or not user_guess.isalpha():
         print(f"Invalid guess length: {len(user_guess)}")
-        update.message.reply_text("Please guess a five letter word containing only letters!")
+        msg = update.message.reply_text("Please guess a five letter word containing only letters!")
         return
 
     if 'guesses' not in context.chat_data[key]:
@@ -358,6 +356,8 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
+    
+    track_message(msg)
 
 def fetch_random_word() -> str:
     with open('words.json', 'r') as file:
@@ -946,7 +946,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
 
     if anti_spam.is_spam(user_id):
         mute_time = anti_spam.mute_time  # Get the mute time from AntiSpam class
-        update.message.reply_text(f'{username}, you are spamming. You have been muted for {mute_time} seconds.')
+        msg = update.message.reply_text(f'{username}, you are spamming. You have been muted for {mute_time} seconds.')
 
         # Mute the user for the mute time
         until_date = int(time.time() + mute_time)
@@ -960,6 +960,8 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         # Schedule job to unmute the user
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
+    
+    track_message(msg)
 
 def rate_limit_check():
     global last_check_time, command_count
@@ -1013,7 +1015,6 @@ def delete_service_messages(update, context):
             print(f"Deleted service message in chat {update.message.chat_id}")
         except Exception as e:
             print(f"Failed to delete service message: {str(e)}")
-
 #endregion Admin Controls
 
 #region Admin Slash Commands
