@@ -990,9 +990,10 @@ def delete_unallowed_addresses(update: Update, context: CallbackContext):
 
 def delete_service_messages(update, context):
     if update.message.left_chat_member or update.message.new_chat_members:
+        time.sleep(5)  # Delay for 5 seconds, adjust as needed
+
         try:
-            context.bot.delete_message(chat_id=update.message.chat_id,
-                                       message_id=update.message.message_id)
+            context.bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
             print(f"Deleted service message in chat {update.message.chat_id}")
         except Exception as e:
             print(f"Failed to delete service message: {str(e)}")
