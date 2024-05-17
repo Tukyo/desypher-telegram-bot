@@ -914,10 +914,12 @@ def verification_timeout(context: CallbackContext) -> None:
         chat_id=job.context['chat_id'],
         message_id=job.context['welcome_message_id']
     )
-    context.bot.send_message(
+    msg = context.bot.send_message(
         chat_id=job.context['chat_id'],
         text=f"User {job.context['user_id']} has been kicked for not verifying in time."
     )
+
+    track_message(msg)
 #endregion User Verification
 
 #region Admin Controls
