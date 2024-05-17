@@ -9,6 +9,7 @@ import threading
 import pandas as pd
 import mplfinance as mpf
 from web3 import Web3
+from decimal import Decimal
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from collections import deque, defaultdict
@@ -737,12 +738,13 @@ def handle_transfer_event(event):
 
         sypher_price_in_usd = get_token_price_in_fiat(contract_address, 'usd')
         if sypher_price_in_usd is not None:
+            # Convert float to Decimal before multiplication
+            sypher_price_in_usd = Decimal(sypher_price_in_usd)
             # Calculate total USD value of the transaction
             total_value_usd = sypher_amount * sypher_price_in_usd
             value_message = f" (${total_value_usd:.2f})"
         else:
             value_message = " (USD price not available)"
-
 
         message = f"*💰SYPHER BUY💰*\n\n[{to_address}](https://basescan.org/address/{to_address}) bought {sypher_amount} SYPHER{value_message}"
         print(message)  # Debugging
