@@ -1175,6 +1175,9 @@ def main() -> None:
 
     # Handler to delete unallowed messages
     dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
+    
+    # Register the message handler for new users
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
 
     # Add a handler for deleting service messages
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members | Filters.status_update.left_chat_member, delete_service_messages))
@@ -1184,9 +1187,6 @@ def main() -> None:
     
     # Register the message handler for anti-spam
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
-    
-    # Register the message handler for new users
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
 
     # Register the callback query handler for button clicks
     dispatcher.add_handler(CallbackQueryHandler(verification_callback, pattern='^verify_\d+$'))
