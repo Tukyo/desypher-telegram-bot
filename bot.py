@@ -657,7 +657,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
             "Welcome to Tukyo Games!\n\n"
             "**Admins will NEVER DM YOU FIRST!**\n\n"
             "To start verification, please click Initialize Bot, then send the bot a /start command in DM.\n\n"
-            "After initializing the bot, return to the main chat and click 'Click Here to Verify'\n."
+            "After initializing the bot, return to the main chat and click 'Click Here to Verify'.\n"
         )
 
         keyboard = [
@@ -667,7 +667,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
+        context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup, parse_mode='Markdown')
 
         # Start a verification timeout job
         job_queue = context.job_queue
