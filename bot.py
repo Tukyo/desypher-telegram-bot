@@ -735,13 +735,25 @@ def start_verification_dm(user_id: int, context: CallbackContext) -> None:
 def verification_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     user_id = query.from_user.id
+    chat_id = query.message.chat_id
     query.answer()
 
     # Send a message to the user's DM to start the verification process
     start_verification_dm(user_id, context)
     
     # Optionally, you can edit the original message to indicate the button was clicked
-    query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
+    verification_started_message = query.edit_message_text(text="A verification message has been sent to your DMs. Please check your messages.")
+    verification_started_id = verification_started_message.message_id
+
+    job_queue = context.job_queue
+    job_queue.run_once(delete_verification_message, 30, context={'chat_id': chat_id, 'message_id': verification_started_id})
+
+def delete_verification_message(context: CallbackContext) -> None:
+    job = context.job
+    context.bot.delete_message(
+        chat_id=job.context['chat_id'],
+        message_id=job.context['message_id']
+    )
 
 def generate_verification_buttons() -> InlineKeyboardMarkup:
     all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
