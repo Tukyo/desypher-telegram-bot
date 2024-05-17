@@ -1195,7 +1195,7 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, delete_service_messages))
 
     # Register the message handler for guesses
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
+    # dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
     
     # Register the message handler for anti-spam
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
