@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import json
 import random
@@ -60,8 +61,10 @@ BASESCAN_API_KEY = os.getenv('BASESCAN_API')
 
 web3 = Web3(Web3.HTTPProvider(BASE_ENDPOINT))
 contract_address = config['contractAddress']
-abi = config['abi']
 pool_address = config['lpAddress']
+abi = config['abi']
+
+eth_address_pattern = re.compile(r'\b0x[a-fA-F0-9]{40}\b')
 
 if web3.is_connected():
     network_id = web3.net.version
@@ -970,6 +973,17 @@ def is_user_admin(update: Update, context: CallbackContext) -> bool:
     user_is_admin = any(admin.user.id == user_id for admin in chat_admins)
 
     return user_is_admin
+
+def delete_unallowed_addresses(update: Update, context: CallbackContext):
+    message_text = update.message.text
+    found_addresses = eth_address_pattern.findall(message_text)
+
+    allowed_addresses = [config['contractAddress'].lower(), config['lpAddress'].lower()]
+
+    for address in found_addresses:
+        if address.lower() not in allowed_addresses:
+            update.message.delete()
+            break
 #endregion Admin Controls
 
 #region Admin Slash Commands
@@ -977,6 +991,7 @@ def admin_help(update: Update, context: CallbackContext) -> None:
     if is_user_admin(update, context):
         msg = update.message.reply_text(
             "Admin commands:\n"
+            "/cleanbot - Cleans all bot messages\n"
             "/cleargames - Clear all active games\n"
             "/antiraid - Manage anti-raid settings\n"
             "/mute - Mute a user\n"
@@ -1040,13 +1055,14 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
     chat_id = update.effective_chat.id
 
     if is_user_admin(update, context):
+        if update.message.reply_to_message is None:
+            msg = update.message.reply_text("This command must be used in response to another message!")
+            track_message(msg)
+            return
         reply_to_message = update.message.reply_to_message
         if reply_to_message:
             user_id = reply_to_message.from_user.id
             username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
-        else:
-            msg = update.message.reply_text("Please reply to a message from the user you want to mute or unmute.")
-            return
 
         context.bot.restrict_chat_member(
             chat_id=chat_id,
@@ -1071,13 +1087,14 @@ def kick(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
 
     if is_user_admin(update, context):
+        if update.message.reply_to_message is None:
+            msg = update.message.reply_text("This command must be used in response to another message!")
+            track_message(msg)
+            return
         reply_to_message = update.message.reply_to_message
         if reply_to_message:
             user_id = reply_to_message.from_user.id
             username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
-        else:
-            msg = update.message.reply_text("Please reply to a message from the user you want to kick.")
-            return
 
         context.bot.kick_chat_member(chat_id=chat_id, user_id=user_id)
         msg = update.message.reply_text(f"User {username} has been kicked.")
@@ -1151,6 +1168,9 @@ def main() -> None:
     
     # Register the message handler for new users
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
+
+    # Handler to delete unallowed messages
+    dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
 
     # Register the callback query handler for button clicks
     dispatcher.add_handler(CallbackQueryHandler(verification_callback, pattern='^verify_\d+$'))
