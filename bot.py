@@ -952,6 +952,8 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         # Schedule job to unmute the user
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
+    
+    delete_unallowed_addresses(update, context)
 
 def rate_limit_check():
     global last_check_time, command_count
@@ -1181,9 +1183,6 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("unmute", unmute))
     dispatcher.add_handler(CommandHandler("kick", kick))
     #endregion Admin Slash Command Handlers
-
-    # Handler to delete unallowed messages
-    dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
     
     # Register the message handler for new users
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
