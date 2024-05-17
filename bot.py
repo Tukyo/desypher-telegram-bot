@@ -5,6 +5,7 @@ import json
 import random
 import requests
 import telegram
+import threading
 import pandas as pd
 import mplfinance as mpf
 from web3 import Web3
@@ -26,11 +27,13 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandle
 ### /tukyo - Information about the developer of this bot and deSypher
 ### /tukyogames - Information about Tukyo Games and our projects
 ### /deSypher - Direct link to the main game, play it using SYPHER tokens
+### /whitepaper - Link to the deSypher whitepaper
 ### /sypher - Information about the SYPHER token
 ### /contract /ca - Contract address for the SYPHER token
 ### /tokenomics - Information about the SYPHER token
 ### /website - Link to the deSypher website
 ### /report - Report a message to group admins
+### /save - Save a message to your DMs
 #
 ## Ethereum Commands
 ### /price - Get the price of the SYPHER token in USD
@@ -39,6 +42,8 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandle
 ### /volume - 24-hour trading volume of the SYPHER token
 #
 ## Admin Commands
+### /adminhelp - Get a list of admin commands
+### /cleanbot - Clean all bot messages in the chat
 ### /cleargames - Clear all active games in the chat
 ### /antiraid - Manage the anti-raid system
 #### /antiraid end /anti-raid [user_amount] [time_out] [anti_raid_time]
@@ -538,6 +543,12 @@ def save(update: Update, context: CallbackContext):
         elif target_message.sticker:
             content = target_message.sticker.file_id
             content_type = 'sticker'
+        elif target_message.contact:
+            content = target_message.contact
+            content_type = 'contact'
+        elif target_message.location:
+            content = target_message.location
+            content_type = 'location'
         else:
             msg = update.message.reply_text("The message format is not supported.")
             return
@@ -546,9 +557,14 @@ def save(update: Update, context: CallbackContext):
         try:
             if content_type == 'text':
                 context.bot.send_message(chat_id=user.id, text=content)
-            else:  # For all media types
+            elif content_type in ['photo', 'audio', 'document', 'animation', 'video', 'voice', 'video_note', 'sticker']:
                 send_function = getattr(context.bot, f'send_{content_type}')
                 send_function(chat_id=user.id, **{content_type: content})
+            elif content_type == 'contact':
+                context.bot.send_contact(chat_id=user.id, phone_number=content.phone_number, first_name=content.first_name, last_name=content.last_name)
+            elif content_type == 'location':
+                context.bot.send_location(chat_id=user.id, latitude=content.latitude, longitude=content.longitude)
+            
 
             msg = update.message.reply_text("Check your DMs.")
         except Exception as e:
@@ -557,7 +573,6 @@ def save(update: Update, context: CallbackContext):
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
     track_message(msg)
-
 #endregion Main Slash Commands
 
 #region Ethereum Logic
@@ -697,6 +712,38 @@ def plot_candlestick_chart(data_frame):
     save_path = '/tmp/candlestick_chart.png'
     mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
+
+def monitor_transfers():
+    # Create a filter for the Transfer event from the LP address
+    transfer_filter = contract.events.Transfer.createFilter(fromBlock='latest', argument_filters={'from': pool_address})
+    
+    while True:
+        # Check the filter for new entries
+        for event in transfer_filter.get_new_entries():
+            handle_transfer_event(event)
+        # Sleep to prevent constant querying (adjust as necessary)
+        time.sleep(10)
+
+
+def handle_transfer_event(event):
+    # Extract data from the event
+    from_address = event['args']['from']
+    to_address = event['args']['to']
+    amount = event['args']['value']
+    
+    # Check if the transfer is from the LP address
+    if from_address.lower() == pool_address.lower():
+        # Format message
+        message = f"{to_address} bought {web3.fromWei(amount, 'ether')} SYPHER"
+        print(message)  # Debugging
+        # Send message to Telegram
+        send_buy_message(message)
+
+def send_buy_message(text):
+    # Function to send a message to a specific Telegram chat
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    bot.send_message(chat_id=CHAT_ID, text=text)
+
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
@@ -1221,8 +1268,6 @@ def cleanbot(update: Update, context: CallbackContext):
 
         bot_messages = [(cid, msg_id) for cid, msg_id in bot_messages if cid != chat_id]
 
-        update.message.reply_text("Bot messages cleaned up!")
-
 #endregion Admin Slash Commands
 
 def main() -> None:
@@ -1241,6 +1286,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("tukyogames", tukyogames))
     dispatcher.add_handler(CommandHandler("desypher", deSypher))
     dispatcher.add_handler(CommandHandler("sypher", sypher))
+    dispatcher.add_handler(CommandHandler("whitepaper", whitepaper))
     dispatcher.add_handler(CommandHandler("contract", ca))
     dispatcher.add_handler(CommandHandler("ca", ca))
     dispatcher.add_handler(CommandHandler("chart", chart))
@@ -1278,6 +1324,9 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_game, pattern='^startGame$'))
+
+    monitor_thread = threading.Thread(target=monitor_transfers)
+    monitor_thread.start()
     
     # Start the Bot
     updater.start_polling()
