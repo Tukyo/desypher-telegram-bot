@@ -1177,10 +1177,10 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
     
     # Register the message handler for new users
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user, delete_service_messages))
 
     # Add a handler for deleting service messages
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members | Filters.status_update.left_chat_member, delete_service_messages))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, delete_service_messages))
 
     # Register the message handler for guesses
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
