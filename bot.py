@@ -653,6 +653,7 @@ def get_volume():
         print(f"Failed to fetch volume data: {str(e)}")
         return None
 
+#region Chart
 def fetch_ohlcv_data(time_frame):
     now = datetime.now()
     one_hour_ago = now - timedelta(hours=1)
@@ -713,36 +714,46 @@ def plot_candlestick_chart(data_frame):
     save_path = '/tmp/candlestick_chart.png'
     mpf.plot(data_frame, type='candle', style=s, volume=True, savefig=save_path)
     print(f"Chart saved to {save_path}")
+#endregion Chart
 
+#region Buybot
 def monitor_transfers():
     transfer_filter = contract.events.Transfer.create_filter(fromBlock='latest', argument_filters={'from': pool_address})
     
     while True:
-        # Check the filter for new entries
         for event in transfer_filter.get_new_entries():
             handle_transfer_event(event)
-        # Sleep to prevent constant querying (adjust as necessary)
         time.sleep(10)
 
-
 def handle_transfer_event(event):
-    # Extract data from the event
     from_address = event['args']['from']
     to_address = event['args']['to']
     amount = event['args']['value']
     
     # Check if the transfer is from the LP address
     if from_address.lower() == pool_address.lower():
-        # Format message
-        message = f"{to_address} bought {web3.from_wei(amount, 'ether')} SYPHER"
+        # Format message with Markdown
+        sypher_amount = web3.from_wei(amount, 'ether')
+
+        sypher_price_in_usd = get_token_price_in_fiat(contract_address, 'usd')
+        if sypher_price_in_usd is not None:
+            # Calculate total USD value of the transaction
+            total_value_usd = sypher_amount * sypher_price_in_usd
+            value_message = f" (${total_value_usd:.2f})"
+        else:
+            value_message = " (USD price not available)"
+
+
+        message = f"*💰SYPHER BUY💰*\n\n[{to_address}](https://basescan.org/address/{to_address}) bought {sypher_amount} SYPHER{value_message}"
         print(message)  # Debugging
-        # Send message to Telegram
+
         send_buy_message(message)
 
 def send_buy_message(text):
-    # Function to send a message to a specific Telegram chat
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    bot.send_message(chat_id=CHAT_ID, text=text)
+    msg = bot.send_message(chat_id=CHAT_ID, text=text)
+    track_message(msg)
+#endregion Buybot
 
 #endregion Ethereum Logic
 
