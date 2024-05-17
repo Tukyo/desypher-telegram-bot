@@ -935,6 +935,8 @@ def handle_message(update: Update, context: CallbackContext) -> None:
     
     delete_unallowed_addresses(update, context)
 
+    handle_guess(update, context)
+
     if is_user_admin(update, context):
         return
     
@@ -1193,9 +1195,6 @@ def main() -> None:
 
     # Add a handler for deleting service messages
     dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, delete_service_messages))
-
-    # Register the message handler for guesses
-    # dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
     
     # Register the message handler for anti-spam
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
