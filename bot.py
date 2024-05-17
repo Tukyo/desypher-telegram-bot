@@ -138,7 +138,7 @@ class AntiRaid:
 #endregion Classes
 
 anti_spam = AntiSpam(rate_limit=5, time_window=10, mute_time=60)
-anti_raid = AntiRaid(user_amount=2, time_out=30, anti_raid_time=180)
+anti_raid = AntiRaid(user_amount=25, time_out=30, anti_raid_time=180)
 
 RATE_LIMIT = 100  # Maximum number of allowed commands
 TIME_PERIOD = 60  # Time period in seconds
@@ -477,15 +477,21 @@ def report(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
     CHAT_ID = int(os.getenv('CHAT_ID'))
 
+    reported_user = update.message.reply_to_message.from_user.username
+
     if chat_id == CHAT_ID:
-        admin_mentions = ' '.join(admins)
+        if reported_user in admins:
+            # If the reported user is an admin, send a message saying that admins cannot be reported
+            context.bot.send_message(CHAT_ID, text="Nice try lol")
+        else:
+            admin_mentions = ' '.join(admins)
 
-        report_message = f"Reported Message to admins.\n {admin_mentions}\n"
-        # Send the message as plain text
-        message = context.bot.send_message(CHAT_ID, text=report_message, disable_web_page_preview=True)
+            report_message = f"Reported Message to admins.\n {admin_mentions}\n"
+            # Send the message as plain text
+            message = context.bot.send_message(CHAT_ID, text=report_message, disable_web_page_preview=True)
 
-        # Immediately edit the message to remove the usernames, using Markdown for the new message
-        context.bot.edit_message_text(chat_id=CHAT_ID, message_id=message.message_id, text="⚠️ Message Reported to Admins ⚠️", parse_mode='Markdown', disable_web_page_preview=True)
+            # Immediately edit the message to remove the usernames, using Markdown for the new message
+            context.bot.edit_message_text(chat_id=CHAT_ID, message_id=message.message_id, text="⚠️ Message Reported to Admins ⚠️", parse_mode='Markdown', disable_web_page_preview=True)
     else:
         update.message.reply_text("This command can only be used in the main chat.")
 #endregion Main Slash Commands
