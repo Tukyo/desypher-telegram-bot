@@ -722,7 +722,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
+        job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id, 'new_user_id': user_id}, name=str(user_id))
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
@@ -737,6 +737,14 @@ def verification_callback(update: Update, context: CallbackContext) -> None:
     user_id = query.from_user.id
     chat_id = query.message.chat_id
     query.answer()
+
+    new_user_id = context.job.context['new_user_id']
+
+    if is_user_admin(update, context):
+        return
+
+    if user_id != new_user_id:
+        return
 
     # Send a message to the user's DM to start the verification process
     start_verification_dm(user_id, context)
