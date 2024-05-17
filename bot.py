@@ -177,6 +177,7 @@ def help(update: Update, context: CallbackContext) -> None:
             '/tukyo: The developer of this bot, and deSypher.\n'
             '/tukyogames: This will provide information about Tukyo Games and our projects.\n'
             '/deSypher: This will direct you to the main game, you can play it using SYPHER tokens!\n'
+            '/whitepaper: This will provide you with a link to the deSypher whitepaper.\n'
             '/sypher /tokenomics: These commands will provide you with information about the SYPHER token.\n'
             '/contract /ca: These commands will show you the contract address for the SYPHER token.\n'
             '/website: This will provide you with a link to the deSypher website.\n'
@@ -733,7 +734,7 @@ def handle_transfer_event(event):
     # Check if the transfer is from the LP address
     if from_address.lower() == pool_address.lower():
         # Format message
-        message = f"{to_address} bought {web3.fromWei(amount, 'ether')} SYPHER"
+        message = f"{to_address} bought {web3.from_wei(amount, 'ether')} SYPHER"
         print(message)  # Debugging
         # Send message to Telegram
         send_buy_message(message)
