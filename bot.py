@@ -733,27 +733,37 @@ def handle_transfer_event(event):
     
     # Check if the transfer is from the LP address
     if from_address.lower() == pool_address.lower():
-        # Format message with Markdown
+        # Convert amount to SYPHER (from Wei)
         sypher_amount = web3.from_wei(amount, 'ether')
 
+        # Fetch the USD price of SYPHER
         sypher_price_in_usd = get_token_price_in_fiat(contract_address, 'usd')
         if sypher_price_in_usd is not None:
-            # Convert float to Decimal before multiplication
             sypher_price_in_usd = Decimal(sypher_price_in_usd)
-            # Calculate total USD value of the transaction
             total_value_usd = sypher_amount * sypher_price_in_usd
-            value_message = f" (${total_value_usd:.2f})"
+            value_message = f" ({total_value_usd:.2f} USD)"
+            header_emoji, buyer_emoji = categorize_buyer(total_value_usd)
         else:
             value_message = " (USD price not available)"
+            header_emoji, buyer_emoji = "💸", "🐟"  # Default to Fish if unable to determine price
 
-        message = f"*💰SYPHER BUY💰*\n\n[{to_address}](https://basescan.org/address/{to_address}) bought {sypher_amount} SYPHER{value_message}"
+        # Format message with Markdown
+        message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message} \n\n[{to_address}](https://basescan.org/address/{to_address})"
         print(message)  # Debugging
 
         send_buy_message(message)
 
+def categorize_buyer(usd_value):
+    if usd_value < 1:
+        return "💸", "🐟"
+    elif usd_value < 2:
+        return "💰", "🐬"
+    else:
+        return "🤑", "🐳"
+    
 def send_buy_message(text):
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    msg = bot.send_message(chat_id=CHAT_ID, text=text)
+    msg = bot.send_message(chat_id=CHAT_ID, text=text, parse_mode=telegram.ParseMode.MARKDOWN_V2)
     track_message(msg)
 #endregion Buybot
 
