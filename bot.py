@@ -437,7 +437,7 @@ def sypher(update: Update, context: CallbackContext) -> None:
 
 def ca(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        msg = pdate.message.reply_text(
+        msg = update.message.reply_text(
             '0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
         )
     else:
