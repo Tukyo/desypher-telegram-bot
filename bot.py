@@ -508,29 +508,56 @@ def save(update: Update, context: CallbackContext):
             msg = update.message.reply_text("Could not identify the user.")
             return
 
+        # Determine the type of the message
+        content = None
+        content_type = None
         if target_message.text:
             content = target_message.text
             content_type = 'text'
         elif target_message.photo:
             content = target_message.photo[-1].file_id
             content_type = 'photo'
+        elif target_message.audio:
+            content = target_message.audio.file_id
+            content_type = 'audio'
+        elif target_message.document:
+            content = target_message.document.file_id
+            content_type = 'document'
+        elif target_message.animation:
+            content = target_message.animation.file_id
+            content_type = 'animation'
+        elif target_message.video:
+            content = target_message.video.file_id
+            content_type = 'video'
+        elif target_message.voice:
+            content = target_message.voice.file_id
+            content_type = 'voice'
+        elif target_message.video_note:
+            content = target_message.video_note.file_id
+            content_type = 'video_note'
+        elif target_message.sticker:
+            content = target_message.sticker.file_id
+            content_type = 'sticker'
         else:
             msg = update.message.reply_text("The message format is not supported.")
             return
 
+        # Send the message or media to the user's DM
         try:
             if content_type == 'text':
-                context.bot.send_message(chat_id=user.id, text=f"Saved message: {content}")
-            elif content_type == 'photo':
-                context.bot.send_photo(chat_id=user.id, photo=content)
+                context.bot.send_message(chat_id=user.id, text=content)
+            else:  # For all media types
+                send_function = getattr(context.bot, f'send_{content_type}')
+                send_function(chat_id=user.id, **{content_type: content})
 
-            msg = update.message.reply_text("Your message has been saved to your DMs.")
+            msg = update.message.reply_text("Check your DMs.")
         except Exception as e:
             msg = update.message.reply_text(f"Failed to send DM: {str(e)}")
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
-    
+
     track_message(msg)
+
 #endregion Main Slash Commands
 
 #region Ethereum Logic
