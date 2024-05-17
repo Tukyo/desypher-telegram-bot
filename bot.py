@@ -144,12 +144,11 @@ command_count = 0
 
 user_verification_progress = {}
 
+bot_messages = []
+
 def track_message(message):
-    global bot_messages
     bot_messages.append((message.chat.id, message.message_id))
     print(f"Tracked message: {message.message_id}")
-
-bot_messages = []
 
 #region Main Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
