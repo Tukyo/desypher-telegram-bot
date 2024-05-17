@@ -667,11 +667,12 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup, parse_mode='Markdown')
+        welcomeMessage = context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup, parse_mode='Markdown')
+        welcome_message_id = welcomeMessage.message_id
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(kick_user, 180, context={'chat_id': chat_id, 'user_id': user_id}, name=str(user_id))
+        job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
@@ -794,11 +795,15 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Start Verification", callback_data='start_verification')]])
         )
         
-def kick_user(context: CallbackContext) -> None:
+def verification_timeout(context: CallbackContext) -> None:
     job = context.job
     context.bot.kick_chat_member(
         chat_id=job.context['chat_id'],
         user_id=job.context['user_id']
+    )
+    context.bot.delete_message(
+        chat_id=job.context['chat_id'],
+        message_id=job.context['welcome_message_id']
     )
     context.bot.send_message(
         chat_id=job.context['chat_id'],
