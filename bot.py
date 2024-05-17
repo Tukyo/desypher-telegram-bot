@@ -932,6 +932,12 @@ def unmute_user(context: CallbackContext) -> None:
     )
 
 def handle_message(update: Update, context: CallbackContext) -> None:
+    
+    delete_unallowed_addresses(update, context)
+
+    if is_user_admin(update, context):
+        return
+    
     user_id = update.message.from_user.id
     chat_id = update.message.chat.id
     username = update.message.from_user.username or update.message.from_user.first_name
@@ -952,8 +958,6 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         # Schedule job to unmute the user
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
-    
-    delete_unallowed_addresses(update, context)
 
 def rate_limit_check():
     global last_check_time, command_count
