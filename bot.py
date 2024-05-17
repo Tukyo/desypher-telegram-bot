@@ -176,6 +176,7 @@ def help(update: Update, context: CallbackContext) -> None:
             '/contract /ca: These commands will show you the contract address for the SYPHER token.\n'
             '/website: This will provide you with a link to the deSypher website.\n'
             '/report: Respond to a message with this command to report it to group admins.\n'
+            '/save: Respond to a message with this command to receive it in your DMs.\n'
             '/price: Price of the SYPHER token in USD. Use 3 digit currency modifiers to get the price in other fiat currencies. Ex: "/price eur".\n'
             '/chart: This will reveal a price chart, and links to charting websites. Optional modifiers are "/chart d, h, m".\n'
             '/liquidity /lp: View the liquidity value of the SYPHER V3 pool.\n'
@@ -494,6 +495,42 @@ def report(update: Update, context: CallbackContext) -> None:
             context.bot.edit_message_text(chat_id=CHAT_ID, message_id=message.message_id, text="⚠️ Message Reported to Admins ⚠️", parse_mode='Markdown', disable_web_page_preview=True)
     else:
         update.message.reply_text("This command can only be used in the main chat.")
+
+def save(update: Update, context: CallbackContext):
+    if rate_limit_check():
+        target_message = update.message.reply_to_message
+        if target_message is None:
+            msg = update.message.reply_text("Please reply to the message you want to save with /save.")
+            return
+
+        user = update.effective_user
+        if user is None:
+            msg = update.message.reply_text("Could not identify the user.")
+            return
+
+        if target_message.text:
+            content = target_message.text
+            content_type = 'text'
+        elif target_message.photo:
+            content = target_message.photo[-1].file_id
+            content_type = 'photo'
+        else:
+            msg = update.message.reply_text("The message format is not supported.")
+            return
+
+        try:
+            if content_type == 'text':
+                context.bot.send_message(chat_id=user.id, text=f"Saved message: {content}")
+            elif content_type == 'photo':
+                context.bot.send_photo(chat_id=user.id, photo=content)
+
+            msg = update.message.reply_text("Your message has been saved to your DMs.")
+        except Exception as e:
+            msg = update.message.reply_text(f"Failed to send DM: {str(e)}")
+    else:
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 #endregion Main Slash Commands
 
 #region Ethereum Logic
@@ -730,7 +767,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         )
 
         if anti_raid.is_raid():
-            update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
+            msg = update.message.reply_text(f'Anti-raid triggered! Please wait {anti_raid.time_to_wait()} seconds before new users can join.')
             
             # Get the user_id of the user that just joined
             user_id = update.message.new_chat_members[0].id
@@ -765,6 +802,8 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
 
         update.message.delete()
+
+    track_message(msg)
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
@@ -1185,6 +1224,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("tokenomics", sypher))
     dispatcher.add_handler(CommandHandler("website", website))
     dispatcher.add_handler(CommandHandler("report", report))
+    dispatcher.add_handler(CommandHandler("save", save))
     #endregion General Slash Command Handlers
 
     #region Admin Slash Command Handlers
