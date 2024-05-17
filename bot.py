@@ -987,6 +987,15 @@ def delete_unallowed_addresses(update: Update, context: CallbackContext):
         if address.lower() not in allowed_addresses:
             update.message.delete()
             break
+
+def delete_service_messages(update, context):
+    if update.message.left_chat_member or update.message.new_chat_members:
+        try:
+            context.bot.delete_message(chat_id=update.message.chat_id,
+                                       message_id=update.message.message_id)
+            print(f"Deleted service message in chat {update.message.chat_id}")
+        except Exception as e:
+            print(f"Failed to delete service message: {str(e)}")
 #endregion Admin Controls
 
 #region Admin Slash Commands
@@ -1165,6 +1174,9 @@ def main() -> None:
 
     # Handler to delete unallowed messages
     dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
+
+    # Add a handler for deleting service messages
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members | Filters.status_update.left_chat_member, delete_service_messages))
 
     # Register the message handler for guesses
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
