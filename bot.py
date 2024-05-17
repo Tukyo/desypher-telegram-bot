@@ -525,6 +525,18 @@ def get_liquidity():
         print(f"Failed to fetch liquidity data: {str(e)}")
         return None
 
+def get_volume():
+    try:
+        response = requests.get("https://api.geckoterminal.com/api/v2/networks/base/pools/0xB0fbaa5c7D28B33Ac18D9861D4909396c1B8029b")
+        response.raise_for_status()
+        data = response.json()
+        # Navigate the JSON to find the 24-hour volume in USD
+        volume_24h_usd = data['data']['attributes']['volume_usd']['h24']
+        return volume_24h_usd
+    except requests.RequestException as e:
+        print(f"Failed to fetch volume data: {str(e)}")
+        return None
+
 def fetch_ohlcv_data(time_frame):
     now = datetime.now()
     one_hour_ago = now - timedelta(hours=1)
@@ -615,6 +627,16 @@ def liquidity(update: Update, context: CallbackContext) -> None:
             update.message.reply_text(f"Liquidity: ${liquidity_usd}")
         else:
             update.message.reply_text("Failed to fetch liquidity data.")
+    else:
+        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+
+def volume(update, context):
+    if rate_limit_check():
+        volume_24h_usd = get_volume()
+        if volume_24h_usd:
+            update.message.reply_text(f"24-hour trading volume in USD: ${volume_24h_usd}")
+        else:
+            update.message.reply_text("Failed to fetch volume data.")
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
