@@ -712,7 +712,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         keyboard = [
             [InlineKeyboardButton("Initialize Bot", url=f"https://t.me/deSypher_bot?start={user_id}")],
-            [InlineKeyboardButton("Click Here to Verify", callback_data='verify')]
+            [InlineKeyboardButton("Click Here to Verify", callback_data=f'verify_{user_id}')]
         ]
         
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -722,7 +722,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id, 'new_user_id': user_id}, name=str(user_id))
+        job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
@@ -734,18 +734,21 @@ def start_verification_dm(user_id: int, context: CallbackContext) -> None:
 
 def verification_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
+    callback_data = query.data
     user_id = query.from_user.id
     chat_id = query.message.chat_id
     query.answer()
 
-    new_user_id = context.job.context['new_user_id']
+    # Extract user_id from the callback_data
+    _, callback_user_id = callback_data.split('_')
+    callback_user_id = int(callback_user_id)
+
+    if user_id != callback_user_id:
+        return  # Do not process if the callback user ID does not match the button user ID
 
     if is_user_admin(update, context):
         return
-
-    if user_id != new_user_id:
-        return
-
+    
     # Send a message to the user's DM to start the verification process
     start_verification_dm(user_id, context)
     
@@ -1073,6 +1076,7 @@ def main() -> None:
     #endregion General Slash Command Handlers
 
     #region Admin Slash Command Handlers
+    dispatcher,add_handler(CommandHandler("adminhelp", admin_help))
     dispatcher.add_handler(CommandHandler('cleargames', cleargames))
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     dispatcher.add_handler(CommandHandler("mute", mute))
