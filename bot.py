@@ -1087,6 +1087,7 @@ def kick(update: Update, context: CallbackContext) -> None:
     track_message(msg)
 
 def cleanbot(update: Update, context: CallbackContext):
+    global bot_messages
     if is_user_admin(update, context):
         chat_id = update.effective_chat.id
 
@@ -1098,8 +1099,6 @@ def cleanbot(update: Update, context: CallbackContext):
             except Exception as e:
                 print(f"Failed to delete message {msg_id}: {str(e)}")  # Handle errors
 
-        # Clear the tracked messages for this chat after cleaning
-        global bot_messages
         bot_messages = [(cid, msg_id) for cid, msg_id in bot_messages if cid != chat_id]
 
         update.message.reply_text("Bot messages cleaned up!")
