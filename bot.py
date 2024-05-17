@@ -714,8 +714,7 @@ def plot_candlestick_chart(data_frame):
     print(f"Chart saved to {save_path}")
 
 def monitor_transfers():
-    # Create a filter for the Transfer event from the LP address
-    transfer_filter = contract.events.Transfer.createFilter(fromBlock='latest', argument_filters={'from': pool_address})
+    transfer_filter = contract.events.Transfer.create_filter(fromBlock='latest', argument_filters={'from': pool_address})
     
     while True:
         # Check the filter for new entries
