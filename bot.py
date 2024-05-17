@@ -1163,6 +1163,9 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("kick", kick))
     #endregion Admin Slash Command Handlers
 
+    # Handler to delete unallowed messages
+    dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
+
     # Register the message handler for guesses
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
     
@@ -1171,9 +1174,6 @@ def main() -> None:
     
     # Register the message handler for new users
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
-
-    # Handler to delete unallowed messages
-    dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
 
     # Register the callback query handler for button clicks
     dispatcher.add_handler(CallbackQueryHandler(verification_callback, pattern='^verify_\d+$'))
