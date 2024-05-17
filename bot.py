@@ -752,6 +752,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         welcomeMessage = context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup, parse_mode='Markdown')
         welcome_message_id = welcomeMessage.message_id
+        context.chat_data['non_deletable_message_id'] = welcomeMessage.message_id
 
         # Start a verification timeout job
         job_queue = context.job_queue
@@ -989,14 +990,18 @@ def delete_unallowed_addresses(update: Update, context: CallbackContext):
             break
 
 def delete_service_messages(update, context):
-    if update.message.left_chat_member or update.message.new_chat_members:
-        time.sleep(5)  # Delay for 5 seconds, adjust as needed
+    # Check if the message ID is marked as non-deletable
+    non_deletable_message_id = context.chat_data.get('non_deletable_message_id')
+    if update.message.message_id == non_deletable_message_id:
+        return  # Do not delete this message
 
+    if update.message.left_chat_member or update.message.new_chat_members:
         try:
             context.bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
             print(f"Deleted service message in chat {update.message.chat_id}")
         except Exception as e:
             print(f"Failed to delete service message: {str(e)}")
+
 #endregion Admin Controls
 
 #region Admin Slash Commands
@@ -1176,11 +1181,11 @@ def main() -> None:
     # Handler to delete unallowed messages
     dispatcher.add_handler(MessageHandler(Filters.text & (~Filters.command), delete_unallowed_addresses))
     
-    # Register the message handler for new users
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user, delete_service_messages))
-
     # Add a handler for deleting service messages
-    dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, delete_service_messages))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members | Filters.status_update.left_chat_member, delete_service_messages))
+    
+    # Register the message handler for new users
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
 
     # Register the message handler for guesses
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
