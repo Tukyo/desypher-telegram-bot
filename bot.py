@@ -1076,7 +1076,7 @@ def main() -> None:
     #endregion General Slash Command Handlers
 
     #region Admin Slash Command Handlers
-    dispatcher,add_handler(CommandHandler("adminhelp", admin_help))
+    dispatcher.add_handler(CommandHandler("adminhelp", admin_help))
     dispatcher.add_handler(CommandHandler('cleargames', cleargames))
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     dispatcher.add_handler(CommandHandler("mute", mute))
