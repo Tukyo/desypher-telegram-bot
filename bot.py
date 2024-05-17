@@ -143,6 +143,12 @@ last_check_time = time.time()
 command_count = 0
 
 user_verification_progress = {}
+bot_messages = []
+
+def track_message(message):
+    global bot_messages
+    bot_messages.append((message.chat.id, message.message_id))
+    print(f"Tracked message: {message.message_id}")
 
 #region Main Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
@@ -153,7 +159,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def help(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = update.message.reply_text(
             'Here are the commands you can use:\n'
             '\n'
             '/start: This starts the bot, and sends a welcome message.\n'
@@ -173,7 +179,9 @@ def help(update: Update, context: CallbackContext) -> None:
             '/volume: 24-hour trading volume of the SYPHER token.\n'
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 #region Play Game
 def play(update: Update, context: CallbackContext) -> None:
@@ -357,7 +365,7 @@ def fetch_random_word() -> str:
 
 def tukyo(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = update.message.reply_text(
             'Tukyo is the developer of this bot, deSypher and other projects. There are many impersonators, the only real Tukyo on telegram is @tukyowave.\n'
             '\n'
             '| Socials |\n'
@@ -371,11 +379,13 @@ def tukyo(update: Update, context: CallbackContext) -> None:
             'Github: https://github.com/tukyo\n'
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def tukyogames(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = update.message.reply_text(
             'Tukyo Games is a game development studio that is focused on bringing innovative blockchain technology to captivating and new game ideas. We use blockchain technology, without hindering the gaming experience.\n'
             '\n'
             'Website: https://tukyogames.com/ (Coming Soon)\n'
@@ -386,21 +396,25 @@ def tukyogames(update: Update, context: CallbackContext) -> None:
             'Profectio: https://www.tukyowave.com/projects/profectio\n'
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def deSypher(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = update.message.reply_text(
             'deSypher is an Onchain puzzle game that can be played on Base. It is a game that requires SYPHER to play. The goal of the game is to guess the correct word in four attempts. Guess the correct word, or go broke!\n'
             '\n'
             'Website: https://desypher.net/\n'
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def sypher(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = update.message.reply_text(
             'SYPHER is the native token of deSypher. It is used to play the game, and can be earned by playing the game.\n'
             '\n'
             'Get SYPHER: [Uniswap](https://app.uniswap.org/#/swap?outputCurrency=0x21b9D428EB20FA075A29d51813E57BAb85406620)\n'
@@ -414,31 +428,39 @@ def sypher(update: Update, context: CallbackContext) -> None:
             disable_web_page_preview=True
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def ca(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = pdate.message.reply_text(
             '0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def whitepaper(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = update.message.reply_text(
         'Whitepaper: https://desypher.net/whitepaper.html\n'
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def website(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text(
+        msg = update.message.reply_text(
             'https://desypher.net/\n'
         )
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def report(update: Update, context: CallbackContext) -> None:
     admins= [
@@ -612,38 +634,44 @@ def price(update: Update, context: CallbackContext) -> None:
 
         # Check if the provided currency is supported
         if currency not in ['usd', 'eur', 'jpy', 'gbp', 'aud', 'cad', 'mxn']:
-            update.message.reply_text("Unsupported currency. Please use 'usd', 'eur'. 'jpy', 'gbp', 'aud', 'cad' or 'mxn'.")
+            msg = update.message.reply_text("Unsupported currency. Please use 'usd', 'eur'. 'jpy', 'gbp', 'aud', 'cad' or 'mxn'.")
             return
 
         # Fetch and format the token price in the specified currency
         token_price_in_fiat = get_token_price_in_fiat(contract_address, currency)
         if token_price_in_fiat is not None:
             formatted_price = format(token_price_in_fiat, '.4f')
-            update.message.reply_text(f"SYPHER • {currency.upper()}: {formatted_price}")
+            msg = update.message.reply_text(f"SYPHER • {currency.upper()}: {formatted_price}")
         else:
-            update.message.reply_text(f"Failed to retrieve the price of the token in {currency.upper()}.")
+            msg = update.message.reply_text(f"Failed to retrieve the price of the token in {currency.upper()}.")
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def liquidity(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
         liquidity_usd = get_liquidity()
         if liquidity_usd:
-            update.message.reply_text(f"Liquidity: ${liquidity_usd}")
+            msg = update.message.reply_text(f"Liquidity: ${liquidity_usd}")
         else:
-            update.message.reply_text("Failed to fetch liquidity data.")
+            msg = update.message.reply_text("Failed to fetch liquidity data.")
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def volume(update, context):
     if rate_limit_check():
         volume_24h_usd = get_volume()
         if volume_24h_usd:
-            update.message.reply_text(f"24-hour trading volume in USD: ${volume_24h_usd}")
+            msg = update.message.reply_text(f"24-hour trading volume in USD: ${volume_24h_usd}")
         else:
-            update.message.reply_text("Failed to fetch volume data.")
+            msg = update.message.reply_text("Failed to fetch volume data.")
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 
 def chart(update: Update, context: CallbackContext) -> None:
     args = context.args
@@ -658,7 +686,7 @@ def chart(update: Update, context: CallbackContext) -> None:
         elif interval_arg == 'm':
             time_frame = 'minute'
         else:
-            update.message.reply_text('Invalid time frame specified. Please use /chart with m, h, or d.')
+            msg = update.message.reply_text('Invalid time frame specified. Please use /chart with m, h, or d.')
             return
         
     if rate_limit_check():
@@ -666,15 +694,17 @@ def chart(update: Update, context: CallbackContext) -> None:
         if ohlcv_data:
             data_frame = prepare_data_for_chart(ohlcv_data)
             plot_candlestick_chart(data_frame)
-            update.message.reply_photo(
+            msg = update.message.reply_photo(
                 photo=open('/tmp/candlestick_chart.png', 'rb'),
                 caption='\n[Dexscreener](https://dexscreener.com/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b) • [Dextools](https://www.dextools.io/app/en/base/pair-explorer/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?t=1715831623074) • [CMC](https://coinmarketcap.com/dexscan/base/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b/) • [CG](https://www.geckoterminal.com/base/pools/0xb0fbaa5c7d28b33ac18d9861d4909396c1b8029b?utm_source=coingecko)\n',
                 parse_mode='Markdown'
             )
         else:
-            update.message.reply_text('Failed to fetch data or generate chart. Please try again later.')
+            msg = update.message.reply_text('Failed to fetch data or generate chart. Please try again later.')
     else:
-        update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+    
+    track_message(msg)
 #endregion Ethereum Slash Commands
 
 #region User Verification
@@ -945,7 +975,7 @@ def is_user_admin(update: Update, context: CallbackContext) -> bool:
 #region Admin Slash Commands
 def admin_help(update: Update, context: CallbackContext) -> None:
     if is_user_admin(update, context):
-        update.message.reply_text(
+        msg = update.message.reply_text(
             "Admin commands:\n"
             "/cleargames - Clear all active games\n"
             "/antiraid - Manage anti-raid settings\n"
@@ -953,6 +983,8 @@ def admin_help(update: Update, context: CallbackContext) -> None:
             "/unmute - Unmute a user\n"
             "/kick - Kick a user\n"
         )
+    
+    track_message(msg)
 
 def cleargames(update: Update, context: CallbackContext) -> None:
     chat_id = update.effective_chat.id
@@ -963,27 +995,29 @@ def cleargames(update: Update, context: CallbackContext) -> None:
             del context.chat_data[key]
             print(f"Deleted key: {key}")
     
-        update.message.reply_text("All active games have been cleared.")
+        msg = update.message.reply_text("All active games have been cleared.")
     else:
-        update.message.reply_text("You must be an admin to use this command.")
+        msg = update.message.reply_text("You must be an admin to use this command.")
         print(f"User {update.effective_user.id} tried to clear games but is not an admin in chat {update.effective_chat.id}.")
+    
+    track_message(msg)
 
 def antiraid(update: Update, context: CallbackContext) -> None:
     args = context.args
 
     if is_user_admin(update, context):
         if not args:
-            update.message.reply_text("Usage: /antiraid end or /antiraid [user_amount] [time_out] [anti_raid_time]")
+            msg = update.message.reply_text("Usage: /antiraid end or /antiraid [user_amount] [time_out] [anti_raid_time]")
             return
 
         command = args[0]
         if command == 'end':
             if anti_raid.is_raid():
                 anti_raid.anti_raid_end_time = 0
-                update.message.reply_text("Anti-raid timer ended. System reset to normal operation.")
+                msg = update.message.reply_text("Anti-raid timer ended. System reset to normal operation.")
                 print("Anti-raid timer ended. System reset to normal operation.")
             else:
-                update.message.reply_text("No active anti-raid to end.")
+                msg = update.message.reply_text("No active anti-raid to end.")
         else:
             try:
                 user_amount = int(args[0])
@@ -992,13 +1026,15 @@ def antiraid(update: Update, context: CallbackContext) -> None:
                 anti_raid.user_amount = user_amount
                 anti_raid.time_out = time_out
                 anti_raid.anti_raid_time = anti_raid_time
-                update.message.reply_text(f"Anti-raid settings updated: user_amount={user_amount}, time_out={time_out}, anti_raid_time={anti_raid_time}")
+                msg = update.message.reply_text(f"Anti-raid settings updated: user_amount={user_amount}, time_out={time_out}, anti_raid_time={anti_raid_time}")
                 print(f"Updated AntiRaid settings to user_amount={user_amount}, time_out={time_out}, anti_raid_time={anti_raid_time}")
             except (IndexError, ValueError):
-                update.message.reply_text("Invalid arguments. Usage: /antiraid [user_amount] [time_out] [anti_raid_time]")
+                msg = update.message.reply_text("Invalid arguments. Usage: /antiraid [user_amount] [time_out] [anti_raid_time]")
     else:
-        update.message.reply_text("You must be an admin to use this command.")
+        msg = update.message.reply_text("You must be an admin to use this command.")
         print(f"User {update.effective_user.id} tried to use /antiraid but is not an admin in chat {update.effective_chat.id}.")
+    
+    track_message(msg)
 
 def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
     chat_id = update.effective_chat.id
@@ -1009,7 +1045,7 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
             user_id = reply_to_message.from_user.id
             username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
         else:
-            update.message.reply_text("Please reply to a message from the user you want to mute or unmute.")
+            msg = update.message.reply_text("Please reply to a message from the user you want to mute or unmute.")
             return
 
         context.bot.restrict_chat_member(
@@ -1019,9 +1055,11 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
         )
 
         action = "muted" if mute else "unmuted"
-        update.message.reply_text(f"User {username} has been {action}.")
+        msg = update.message.reply_text(f"User {username} has been {action}.")
     else:
-        update.message.reply_text("You must be an admin to use this command.")
+        msg = update.message.reply_text("You must be an admin to use this command.")
+    
+    track_message(msg)
 
 def mute(update: Update, context: CallbackContext) -> None:
     toggle_mute(update, context, True)
@@ -1038,13 +1076,34 @@ def kick(update: Update, context: CallbackContext) -> None:
             user_id = reply_to_message.from_user.id
             username = reply_to_message.from_user.username or reply_to_message.from_user.first_name
         else:
-            update.message.reply_text("Please reply to a message from the user you want to kick.")
+            msg = update.message.reply_text("Please reply to a message from the user you want to kick.")
             return
 
         context.bot.kick_chat_member(chat_id=chat_id, user_id=user_id)
-        update.message.reply_text(f"User {username} has been kicked.")
+        msg = update.message.reply_text(f"User {username} has been kicked.")
     else:
-        update.message.reply_text("You must be an admin to use this command.")
+        msg = update.message.reply_text("You must be an admin to use this command.")
+    
+    track_message(msg)
+
+def cleanbot(update: Update, context: CallbackContext):
+    if is_user_admin(update, context):
+        chat_id = update.effective_chat.id
+
+        messages_to_delete = [msg_id for cid, msg_id in bot_messages if cid == chat_id]
+
+        for msg_id in messages_to_delete:
+            try:
+                context.bot.delete_message(chat_id, msg_id)
+            except Exception as e:
+                print(f"Failed to delete message {msg_id}: {str(e)}")  # Handle errors
+
+        # Clear the tracked messages for this chat after cleaning
+        global bot_messages
+        bot_messages = [(cid, msg_id) for cid, msg_id in bot_messages if cid != chat_id]
+
+        update.message.reply_text("Bot messages cleaned up!")
+
 #endregion Admin Slash Commands
 
 def main() -> None:
@@ -1077,6 +1136,7 @@ def main() -> None:
 
     #region Admin Slash Command Handlers
     dispatcher.add_handler(CommandHandler("adminhelp", admin_help))
+    dispatcher.add_handler(CommandHandler('cleanbot', cleanbot))
     dispatcher.add_handler(CommandHandler('cleargames', cleargames))
     dispatcher.add_handler(CommandHandler('antiraid', antiraid))
     dispatcher.add_handler(CommandHandler("mute", mute))
