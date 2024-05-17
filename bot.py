@@ -975,10 +975,13 @@ def is_user_admin(update: Update, context: CallbackContext) -> bool:
     return user_is_admin
 
 def delete_unallowed_addresses(update: Update, context: CallbackContext):
+    print("Checking message for unallowed addresses...")
     message_text = update.message.text
     found_addresses = eth_address_pattern.findall(message_text)
+    print(f"Found addresses: {found_addresses}")
 
     allowed_addresses = [config['contractAddress'].lower(), config['lpAddress'].lower()]
+    print(f"Allowed addresses: {allowed_addresses}")
 
     for address in found_addresses:
         if address.lower() not in allowed_addresses:
