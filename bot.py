@@ -655,25 +655,16 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         # Send the welcome message with the verification button
         welcome_message = (
             "Welcome to Tukyo Games!\n\n"
-            "Check out the links below.\n\n"
-            "* Admins will NEVER DM YOU FIRST! *\n\n"
-            "| deSypher\n"
-            "🌐 · https://desypher.net/\n\n"
-            "| TUKYO\n"
-            "🌐 · https://tukyowave.com/\n"
-            "🐦 · https://twitter.com/tukyowave/\n"
-            "✉️ · @tukyowave\n\n"
-            "| Profectio\n"
-            "🌐 · https://www.tukyowave.com/profectio/\n"
-            "🖼 · https://opensea.io/collection/profectio\n\n"
+            "**Admins will NEVER DM YOU FIRST!**\n\n"
             "To start verification, please click Initialize Bot, then send the bot a /start command in DM.\n\n"
-            "After initializing the bot, return to the main chat and click 'Click Here to Verify'."
+            "After initializing the bot, return to the main chat and click 'Click Here to Verify'\n."
         )
 
         keyboard = [
             [InlineKeyboardButton("Initialize Bot", url=f"https://t.me/deSypher_bot?start={user_id}")],
             [InlineKeyboardButton("Click Here to Verify", callback_data='verify')]
         ]
+        
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         context.bot.send_message(chat_id=chat_id, text=welcome_message, reply_markup=reply_markup)
