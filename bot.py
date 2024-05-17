@@ -758,6 +758,8 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         job_queue = context.job_queue
         job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
 
+        update.message.delete()
+
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
     keyboard = [[InlineKeyboardButton("Start Verification", callback_data='start_verification')]]
@@ -1185,7 +1187,7 @@ def main() -> None:
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, handle_new_user))
 
     # Add a handler for deleting service messages
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members | Filters.status_update.left_chat_member, delete_service_messages))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, delete_service_messages))
 
     # Register the message handler for guesses
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_guess))
