@@ -705,7 +705,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
         # Send the welcome message with the verification button
         welcome_message = (
             "Welcome to Tukyo Games!\n\n"
-            "**Admins will NEVER DM YOU FIRST!**\n\n"
+            "⚠️ Admins will NEVER DM YOU FIRST ⚠️\n\n"
             "To start verification, please click Initialize Bot, then send the bot a /start command in DM.\n\n"
             "After initializing the bot, return to the main chat and click 'Click Here to Verify'.\n"
         )
