@@ -85,40 +85,40 @@ else:
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
 #region Firebase
-firebase_credentials = json.loads(os.getenv('FIREBASE_CREDENTIALS_JSON'))
+# firebase_credentials = json.loads(os.getenv('FIREBASE_CREDENTIALS_JSON'))
 
-cred = credentials.Certificate(firebase_credentials)
-firebase_admin.initialize_app(cred)
+# cred = credentials.Certificate(firebase_credentials)
+# firebase_admin.initialize_app(cred)
 
-db = firestore.client()
+# db = firestore.client()
 
-def increment_test_value():
-    # Reference to the document in the 'test' collection
-    doc_ref = db.collection('test').document('testsuccess')
+# def increment_test_value():
+#     # Reference to the document in the 'test' collection
+#     doc_ref = db.collection('test').document('testsuccess')
 
-    # Run a transaction to ensure atomic increment
-    @firestore.transactional
-    def update_in_transaction(transaction, doc_ref):
-        snapshot = doc_ref.get(transaction=transaction)
-        new_value = 0
-        if snapshot.exists:
-            # If document exists, increment the existing 'tests' field
-            current_value = snapshot.get('tests')
-            new_value = current_value + 1
+#     # Run a transaction to ensure atomic increment
+#     @firestore.transactional
+#     def update_in_transaction(transaction, doc_ref):
+#         snapshot = doc_ref.get(transaction=transaction)
+#         new_value = 0
+#         if snapshot.exists:
+#             # If document exists, increment the existing 'tests' field
+#             current_value = snapshot.get('tests')
+#             new_value = current_value + 1
 
-        # Update the document with the incremented value
-        transaction.set(doc_ref, {'tests': new_value})
+#         # Update the document with the incremented value
+#         transaction.set(doc_ref, {'tests': new_value})
 
-    # Start the transaction
-    transaction = db.transaction()
-    update_in_transaction(transaction, doc_ref)
+#     # Start the transaction
+#     transaction = db.transaction()
+#     update_in_transaction(transaction, doc_ref)
 
-    print(f"Test completed.")
+#     print(f"Test completed.")
 
-def test_firestore(update, context):
-    if is_user_admin(update, context):
-        increment_test_value()
-        update.message.reply_text("Firestore test incremented successfully!")
+# def test_firestore(update, context):
+#     if is_user_admin(update, context):
+#         increment_test_value()
+#         update.message.reply_text("Firestore test incremented successfully!")
 
 #endregion Firebase
 
@@ -1498,7 +1498,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("mute", mute))
     dispatcher.add_handler(CommandHandler("unmute", unmute))
     dispatcher.add_handler(CommandHandler("kick", kick))
-    dispatcher.add_handler(CommandHandler("test", test_firestore))
+    # dispatcher.add_handler(CommandHandler("test", test_firestore))
     #endregion Admin Slash Command Handlers
     
     # Register the message handler for new users
