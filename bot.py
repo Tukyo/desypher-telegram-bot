@@ -740,7 +740,7 @@ def handle_transfer_event(event):
         if sypher_price_in_usd is not None:
             sypher_price_in_usd = Decimal(sypher_price_in_usd)
             total_value_usd = sypher_amount * sypher_price_in_usd
-            if total_value_usd < 2500:
+            if total_value_usd < 500:
                 print("Ignoring small buy")
                 return
             value_message = f" ({total_value_usd:.2f} USD)"
@@ -756,9 +756,9 @@ def handle_transfer_event(event):
         send_buy_message(message)
 
 def categorize_buyer(usd_value):
-    if usd_value < 5000:
+    if usd_value < 2500:
         return "💸", "🐟"
-    elif usd_value < 1000:
+    elif usd_value < 5000:
         return "💰", "🐬"
     else:
         return "🤑", "🐳"
