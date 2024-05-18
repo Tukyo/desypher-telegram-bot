@@ -1094,13 +1094,15 @@ def verification_timeout(context: CallbackContext) -> None:
     context.bot.kick_chat_member(
         chat_id=job.context['chat_id'],
         user_id=job.context['user_id']
-        print("User kicked for not verifying in time.")
     )
+    print("User kicked for not verifying in time.")
+    
     context.bot.delete_message(
         chat_id=job.context['chat_id'],
         message_id=job.context['welcome_message_id']
-        print("User clicked verify button, deleting welcome message.")
     )
+    print("User clicked verify button, deleting welcome message.")
+    
     msg = context.bot.send_message(
         chat_id=job.context['chat_id'],
     )
