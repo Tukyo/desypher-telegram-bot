@@ -898,7 +898,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(verification_timeout, 180, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
+        job_queue.run_once(verification_timeout, 6400, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
 
         update.message.delete()
 
@@ -1026,7 +1026,14 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                 context.bot.restrict_chat_member(
                     chat_id=CHAT_ID,
                     user_id=user_id,
-                    permissions=ChatPermissions(can_send_messages=True)
+                    permissions=ChatPermissions(
+                        can_send_messages=True,
+                        can_send_media_messages=True,
+                        can_send_other_messages=True,
+                        can_send_videos=True,
+                        can_send_photos=True,
+                        can_send_audios=True
+                    )
                 )
                 current_jobs = context.job_queue.get_jobs_by_name(str(user_id))
                 for job in current_jobs:
@@ -1060,7 +1067,7 @@ def verification_timeout(context: CallbackContext) -> None:
     )
     msg = context.bot.send_message(
         chat_id=job.context['chat_id'],
-        text=f"User {job.context['user_id']} has been kicked for not verifying in time."
+        # text=f"User {job.context['user_id']} has been kicked for not verifying in time."
     )
 
     track_message(msg)
@@ -1072,7 +1079,14 @@ def unmute_user(context: CallbackContext) -> None:
     context.bot.restrict_chat_member(
         chat_id=job.context['chat_id'],
         user_id=job.context['user_id'],
-        permissions=ChatPermissions(can_send_messages=True)
+        permissions=ChatPermissions(
+            can_send_messages=True,
+            can_send_media_messages=True,
+            can_send_other_messages=True,
+            can_send_videos=True,
+            can_send_photos=True,
+            can_send_audios=True
+            )
     )
 
 def handle_message(update: Update, context: CallbackContext) -> None:
@@ -1242,7 +1256,15 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
         context.bot.restrict_chat_member(
             chat_id=chat_id,
             user_id=user_id,
-            permissions=ChatPermissions(can_send_messages=not mute)
+            permissions=ChatPermissions(
+                can_send_messages=not mute,
+                can_send_messages=not mute,
+                can_send_media_messages=not mute,
+                can_send_other_messages=not mute,
+                can_send_videos=not mute,
+                can_send_photos=not mute,
+                can_send_audios=not mute
+                )
         )
 
         action = "muted" if mute else "unmuted"
@@ -1292,7 +1314,6 @@ def cleanbot(update: Update, context: CallbackContext):
                 print(f"Failed to delete message {msg_id}: {str(e)}")  # Handle errors
 
         bot_messages = [(cid, msg_id) for cid, msg_id in bot_messages if cid != chat_id]
-
 #endregion Admin Slash Commands
 
 def main() -> None:
