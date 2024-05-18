@@ -71,6 +71,7 @@ pool_address = config['lpAddress']
 abi = config['abi']
 
 eth_address_pattern = re.compile(r'\b0x[a-fA-F0-9]{40}\b')
+telegram_links_pattern = re.compile(r'https://t.me/\S+')
 
 if web3.is_connected():
     network_id = web3.net.version
@@ -162,11 +163,12 @@ def track_message(message):
 #region Main Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
-        update.message.reply_text('Hello! I am the deSypher Bot. For a list of commands, please use /help.')
+        update.message.reply_text('Hello! I am Sypher Bot. For a list of commands, please use /help.')
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
 def help(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         msg = update.message.reply_text(
             'Here are the commands you can use:\n'
@@ -192,7 +194,8 @@ def help(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 #region Play Game
 def play(update: Update, context: CallbackContext) -> None:
@@ -376,6 +379,7 @@ def fetch_random_word() -> str:
 #endregion Play Game
 
 def tukyo(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         msg = update.message.reply_text(
             'Tukyo is the developer of this bot, deSypher and other projects. There are many impersonators, the only real Tukyo on telegram is @tukyowave.\n'
@@ -393,9 +397,11 @@ def tukyo(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def tukyogames(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         msg = update.message.reply_text(
             'Tukyo Games is a game development studio that is focused on bringing innovative blockchain technology to captivating and new game ideas. We use blockchain technology, without hindering the gaming experience.\n'
@@ -410,9 +416,11 @@ def tukyogames(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def deSypher(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         msg = update.message.reply_text(
             'deSypher is an Onchain puzzle game that can be played on Base. It is a game that requires SYPHER to play. The goal of the game is to guess the correct word in four attempts. Guess the correct word, or go broke!\n'
@@ -422,9 +430,11 @@ def deSypher(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def sypher(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         msg = update.message.reply_text(
             'SYPHER is the native token of deSypher. It is used to play the game, and can be earned by playing the game.\n'
@@ -442,9 +452,11 @@ def sypher(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def ca(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         msg = update.message.reply_text(
             '0x21b9D428EB20FA075A29d51813E57BAb85406620\n'
@@ -452,7 +464,8 @@ def ca(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def whitepaper(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
@@ -465,6 +478,7 @@ def whitepaper(update: Update, context: CallbackContext) -> None:
     track_message(msg)
 
 def website(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         msg = update.message.reply_text(
             'https://desypher.net/\n'
@@ -472,7 +486,8 @@ def website(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def report(update: Update, context: CallbackContext) -> None:
     admins= [
@@ -505,6 +520,7 @@ def report(update: Update, context: CallbackContext) -> None:
         update.message.reply_text("This command can only be used in the main chat.")
 
 def save(update: Update, context: CallbackContext):
+    msg = None
     if rate_limit_check():
         target_message = update.message.reply_to_message
         if target_message is None:
@@ -575,7 +591,8 @@ def save(update: Update, context: CallbackContext):
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 #endregion Main Slash Commands
 
 #region Ethereum Logic
@@ -687,7 +704,7 @@ def prepare_data_for_chart(ohlcv_data):
     } for item in ohlcv_list]
 
     data_frame = pd.DataFrame(data)
-    data_frame.sort_values('Date', inplace=True)  # Ensure data is sorted by date
+    data_frame.sort_values('Date', inplace=True)
     data_frame.set_index('Date', inplace=True)
     return data_frame
 
@@ -765,15 +782,18 @@ def categorize_buyer(usd_value):
         return "🤑", "🐳"
     
 def send_buy_message(text):
+    msg = None
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     msg = bot.send_message(chat_id=CHAT_ID, text=text)
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 #endregion Buybot
 
 #endregion Ethereum Logic
 
 #region Ethereum Slash Commands
 def price(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         currency = context.args[0] if context.args else 'usd'
         currency = currency.lower()
@@ -793,9 +813,11 @@ def price(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def liquidity(update: Update, context: CallbackContext) -> None:
+    msg = None
     if rate_limit_check():
         liquidity_usd = get_liquidity()
         if liquidity_usd:
@@ -805,9 +827,11 @@ def liquidity(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def volume(update, context):
+    msg = None
     if rate_limit_check():
         volume_24h_usd = get_volume()
         if volume_24h_usd:
@@ -817,7 +841,8 @@ def volume(update, context):
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def chart(update: Update, context: CallbackContext) -> None:
     args = context.args
@@ -836,6 +861,7 @@ def chart(update: Update, context: CallbackContext) -> None:
             return
         
     if rate_limit_check():
+        msg = None
         ohlcv_data = fetch_ohlcv_data(time_frame)
         if ohlcv_data:
             data_frame = prepare_data_for_chart(ohlcv_data)
@@ -850,11 +876,13 @@ def chart(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 #endregion Ethereum Slash Commands
 
 #region User Verification
 def handle_new_user(update: Update, context: CallbackContext) -> None:
+    msg = None
     for member in update.message.new_chat_members:
         user_id = member.id
         chat_id = update.message.chat.id
@@ -903,9 +931,11 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         update.message.delete()
 
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def start_verification_dm(user_id: int, context: CallbackContext) -> None:
+    print("Sending verification message to user's DM.")
     verification_message = "Welcome to Tukyo Games! Please click the button to begin verification."
     keyboard = [[InlineKeyboardButton("Start Verification", callback_data='start_verification')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -951,7 +981,6 @@ def generate_verification_buttons() -> InlineKeyboardMarkup:
     all_letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     required_letters = list(VERIFICATION_LETTERS)
     
-    # Ensure all required letters are included
     for letter in required_letters:
         if letter in all_letters:
             all_letters.remove(letter)
@@ -1023,6 +1052,7 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                     message_id=user_verification_progress[user_id]['verification_message_id'],
                     text="Verification successful, you may now return to chat!"
                 )
+                print("User successfully verified.")
                 # Unmute the user in the main chat
                 context.bot.restrict_chat_member(
                     chat_id=CHAT_ID,
@@ -1046,6 +1076,7 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
                     text="Verification failed. Please try again.",
                     reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Start Verification", callback_data='start_verification')]])
                 )
+                print("User failed verification prompt.")
             # Reset progress after verification attempt
             user_verification_progress.pop(user_id)
     else:
@@ -1055,23 +1086,27 @@ def handle_verification_button(update: Update, context: CallbackContext) -> None
             text="Verification failed. Please try again.",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Start Verification", callback_data='start_verification')]])
         )
+        print("User failed verification prompt.")
         
 def verification_timeout(context: CallbackContext) -> None:
+    msg = None
     job = context.job
     context.bot.kick_chat_member(
         chat_id=job.context['chat_id'],
         user_id=job.context['user_id']
+        print("User kicked for not verifying in time.")
     )
     context.bot.delete_message(
         chat_id=job.context['chat_id'],
         message_id=job.context['welcome_message_id']
+        print("User clicked verify button, deleting welcome message.")
     )
     msg = context.bot.send_message(
         chat_id=job.context['chat_id'],
-        # text=f"User {job.context['user_id']} has been kicked for not verifying in time."
     )
 
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 #endregion User Verification
 
 #region Admin Controls
@@ -1094,6 +1129,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
     
     delete_unallowed_addresses(update, context)
     delete_filtered_phrases(update, context)
+    delete_blocked_links(update, context)
 
     handle_guess(update, context)
 
@@ -1197,6 +1233,27 @@ def delete_filtered_phrases(update: Update, context: CallbackContext):
                 print(f"Error deleting message: {e}")
             break  # Exit loop after deleting the message 
 
+def delete_blocked_links(update: Update, context: CallbackContext):
+    print("Checking message for unallowed Telegram links...")
+    message_text = update.message.text
+    found_links = telegram_links_pattern.findall(message_text)
+    print(f"Found Telegram links: {found_links}")
+
+    allowed_links = [
+        'https://t.me/tukyogames',
+        'https://t.me/tukyowave',
+        'https://t.me/tukyogamesannouncements'
+    ]
+
+    for link in found_links:
+        if link not in allowed_links:
+            try:
+                update.message.delete()
+                print("Deleted a message with unallowed Telegram link.")
+                return  # Stop further checking if a message is deleted
+            except Exception as e:
+                print(f"Failed to delete message: {e}")
+
 def delete_service_messages(update, context):
     # Check if the message ID is marked as non-deletable
     non_deletable_message_id = context.chat_data.get('non_deletable_message_id')
@@ -1213,6 +1270,7 @@ def delete_service_messages(update, context):
 
 #region Admin Slash Commands
 def admin_help(update: Update, context: CallbackContext) -> None:
+    msg = None
     if is_user_admin(update, context):
         msg = update.message.reply_text(
             "Admin commands:\n"
@@ -1224,9 +1282,11 @@ def admin_help(update: Update, context: CallbackContext) -> None:
             "/kick - Kick a user\n"
         )
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def cleargames(update: Update, context: CallbackContext) -> None:
+    msg = None
     chat_id = update.effective_chat.id
 
     if is_user_admin(update, context):
@@ -1240,9 +1300,11 @@ def cleargames(update: Update, context: CallbackContext) -> None:
         msg = update.message.reply_text("You must be an admin to use this command.")
         print(f"User {update.effective_user.id} tried to clear games but is not an admin in chat {update.effective_chat.id}.")
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def antiraid(update: Update, context: CallbackContext) -> None:
+    msg = None
     args = context.args
 
     if is_user_admin(update, context):
@@ -1274,15 +1336,18 @@ def antiraid(update: Update, context: CallbackContext) -> None:
         msg = update.message.reply_text("You must be an admin to use this command.")
         print(f"User {update.effective_user.id} tried to use /antiraid but is not an admin in chat {update.effective_chat.id}.")
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
+    msg = None
     chat_id = update.effective_chat.id
 
     if is_user_admin(update, context):
         if update.message.reply_to_message is None:
             msg = update.message.reply_text("This command must be used in response to another message!")
-            track_message(msg)
+            if msg is not None:
+                track_message(msg)
             return
         reply_to_message = update.message.reply_to_message
         if reply_to_message:
@@ -1307,7 +1372,8 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
     else:
         msg = update.message.reply_text("You must be an admin to use this command.")
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def mute(update: Update, context: CallbackContext) -> None:
     toggle_mute(update, context, True)
@@ -1316,12 +1382,14 @@ def unmute(update: Update, context: CallbackContext) -> None:
     toggle_mute(update, context, False)
 
 def kick(update: Update, context: CallbackContext) -> None:
+    msg = None
     chat_id = update.effective_chat.id
 
     if is_user_admin(update, context):
         if update.message.reply_to_message is None:
             msg = update.message.reply_text("This command must be used in response to another message!")
-            track_message(msg)
+            if msg is not None:
+                track_message(msg)
             return
         reply_to_message = update.message.reply_to_message
         if reply_to_message:
@@ -1333,7 +1401,8 @@ def kick(update: Update, context: CallbackContext) -> None:
     else:
         msg = update.message.reply_text("You must be an admin to use this command.")
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def cleanbot(update: Update, context: CallbackContext):
     global bot_messages
