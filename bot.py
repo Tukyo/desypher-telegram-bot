@@ -85,40 +85,72 @@ else:
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
 #region Firebase
-# firebase_credentials = json.loads(os.getenv('FIREBASE_CREDENTIALS_JSON'))
+FIREBASE_TYPE= os.getenv('FIREBASE_TYPE')
+FIREBASE_PROJECT_ID = os.getenv('FIREBASE_PROJECT_ID')
+FIREBASE_PRIVATE_KEY_ID= os.getenv('FIREBASE_PRIVATE_KEY_ID')
+FIREBASE_PRIVATE_KEY = os.getenv('FIREBASE_PRIVATE_KEY').replace('\\n', '\n')
+FIREBASE_CLIENT_EMAIL= os.getenv('FIREBASE_CLIENT_EMAIL')
+FIREBASE_CLIENT_ID= os.getenv('FIREBASE_CLIENT_ID')
+FIREBASE_AUTH_URL= os.getenv('FIREBASE_AUTH_URL')
+FIREBASE_TOKEN_URI= os.getenv('FIREBASE_TOKEN_URI')
+FIREBASE_AUTH_PROVIDER_X509_CERT_URL= os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL')
+FIREBASE_CLIENT_X509_CERT_URL= os.getenv('FIREBASE_CLIENT_X509_CERT_URL')
 
-# cred = credentials.Certificate(firebase_credentials)
-# firebase_admin.initialize_app(cred)
+cred = credentials.Certificate({
+    "type": FIREBASE_TYPE,
+    "project_id": FIREBASE_PROJECT_ID,
+    "private_key_id": FIREBASE_PRIVATE_KEY_ID,
+    "private_key": FIREBASE_PRIVATE_KEY,
+    "client_email": FIREBASE_CLIENT_EMAIL,
+    "client_id": FIREBASE_CLIENT_ID,
+    "auth_uri": FIREBASE_AUTH_URL,
+    "token_uri": FIREBASE_TOKEN_URI,
+    "auth_provider_x509_cert_url": FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+    "client_x509_cert_url": FIREBASE_CLIENT_X509_CERT_URL
+})
 
-# db = firestore.client()
+firebase_admin.initialize_app(cred)
 
-# def increment_test_value():
-#     # Reference to the document in the 'test' collection
-#     doc_ref = db.collection('test').document('testsuccess')
+db = firestore.client()
 
-#     # Run a transaction to ensure atomic increment
-#     @firestore.transactional
-#     def update_in_transaction(transaction, doc_ref):
-#         snapshot = doc_ref.get(transaction=transaction)
-#         new_value = 0
-#         if snapshot.exists:
-#             # If document exists, increment the existing 'tests' field
-#             current_value = snapshot.get('tests')
-#             new_value = current_value + 1
+print("Firebase Configuration:")
+print("FIREBASE_TYPE:", FIREBASE_TYPE)
+print("FIREBASE_PROJECT_ID:", FIREBASE_PROJECT_ID)
+print("FIREBASE_CLIENT_EMAIL:", FIREBASE_CLIENT_EMAIL)
+print("FIREBASE_PRIVATE_KEY_ID:", FIREBASE_PRIVATE_KEY_ID)
+print("FIREBASE_CLIENT_ID:", FIREBASE_CLIENT_ID)
+print("FIREBASE_AUTH_URL:", FIREBASE_AUTH_URL)
+print("FIREBASE_TOKEN_URI:", FIREBASE_TOKEN_URI)
+print("FIREBASE_AUTH_PROVIDER_X509_CERT_URL:", FIREBASE_AUTH_PROVIDER_X509_CERT_URL)
+print("FIREBASE_CLIENT_X509_CERT_URL:", FIREBASE_CLIENT_X509_CERT_URL)
 
-#         # Update the document with the incremented value
-#         transaction.set(doc_ref, {'tests': new_value})
+def increment_test_value():
+    # Reference to the document in the 'test' collection
+    doc_ref = db.collection('test').document('testsuccess')
 
-#     # Start the transaction
-#     transaction = db.transaction()
-#     update_in_transaction(transaction, doc_ref)
+    # Run a transaction to ensure atomic increment
+    @firestore.transactional
+    def update_in_transaction(transaction, doc_ref):
+        snapshot = doc_ref.get(transaction=transaction)
+        new_value = 0
+        if snapshot.exists:
+            # If document exists, increment the existing 'tests' field
+            current_value = snapshot.get('tests')
+            new_value = current_value + 1
 
-#     print(f"Test completed.")
+        # Update the document with the incremented value
+        transaction.set(doc_ref, {'tests': new_value})
 
-# def test_firestore(update, context):
-#     if is_user_admin(update, context):
-#         increment_test_value()
-#         update.message.reply_text("Firestore test incremented successfully!")
+    # Start the transaction
+    transaction = db.transaction()
+    update_in_transaction(transaction, doc_ref)
+
+    print(f"Test completed.")
+
+def test_firestore(update, context):
+    if is_user_admin(update, context):
+        increment_test_value()
+        update.message.reply_text("Firestore test incremented successfully!")
 
 #endregion Firebase
 
@@ -1498,7 +1530,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("mute", mute))
     dispatcher.add_handler(CommandHandler("unmute", unmute))
     dispatcher.add_handler(CommandHandler("kick", kick))
-    # dispatcher.add_handler(CommandHandler("test", test_firestore))
+    dispatcher.add_handler(CommandHandler("test", test_firestore))
     #endregion Admin Slash Command Handlers
     
     # Register the message handler for new users
