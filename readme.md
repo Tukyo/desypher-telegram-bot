@@ -43,14 +43,4 @@ Website: https://desypher.net/
 - **/mute** / **/unmute** - Reply to a message with this command to toggle mute for a user
 - **/kick** - Reply to a message with this command to kick a user from the chat
 
-## Features
-
-- **/start**: Initialize interaction with the bot.
-- **/help**: Get a list of available commands and usage instructions.
-- **/play**: Start a new game or interaction.
-- **/tukyo**: Access special features or hidden content.
-- **/tukyogames**: Get information about ongoing or upcoming games.
-- **/desypher**: Direct link to the main game using SYPHER tokens.
-- **/sypher**: Learn more about the SYPHER token and its uses.
-
 For more information about the deSypher project, visit [our website](https://desypher.net/).
