@@ -113,45 +113,31 @@ firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-print("Firebase Configuration:")
-print("FIREBASE_TYPE:", FIREBASE_TYPE)
-print("FIREBASE_PROJECT_ID:", FIREBASE_PROJECT_ID)
-print("FIREBASE_CLIENT_EMAIL:", FIREBASE_CLIENT_EMAIL)
-print("FIREBASE_PRIVATE_KEY_ID:", FIREBASE_PRIVATE_KEY_ID)
-print("FIREBASE_CLIENT_ID:", FIREBASE_CLIENT_ID)
-print("FIREBASE_AUTH_URL:", FIREBASE_AUTH_URL)
-print("FIREBASE_TOKEN_URI:", FIREBASE_TOKEN_URI)
-print("FIREBASE_AUTH_PROVIDER_X509_CERT_URL:", FIREBASE_AUTH_PROVIDER_X509_CERT_URL)
-print("FIREBASE_CLIENT_X509_CERT_URL:", FIREBASE_CLIENT_X509_CERT_URL)
+print("Firebase initialized.")
 
-def increment_test_value():
-    # Reference to the document in the 'test' collection
-    doc_ref = db.collection('test').document('testsuccess')
-
-    # Run a transaction to ensure atomic increment
-    @firestore.transactional
-    def update_in_transaction(transaction, doc_ref):
-        snapshot = doc_ref.get(transaction=transaction)
-        new_value = 0
-        if snapshot.exists:
-            # If document exists, increment the existing 'tests' field
-            current_value = snapshot.get('tests')
-            new_value = current_value + 1
-
-        # Update the document with the incremented value
-        transaction.set(doc_ref, {'tests': new_value})
-
-    # Start the transaction
-    transaction = db.transaction()
-    update_in_transaction(transaction, doc_ref)
-
-    print(f"Test completed.")
-
-def test_firestore(update, context):
+def filter(update, context):
     if is_user_admin(update, context):
-        increment_test_value()
-        update.message.reply_text("Firestore test incremented successfully!")
 
+        command_text = update.message.text[len('/filter '):].strip().lower()
+
+        if not command_text:
+            update.message.reply_text("Please provide some text to filter.")
+            return
+        
+        # Create or update the document in the 'filtered-words' collection
+        doc_ref = db.collection('filtered-words').document(command_text)
+
+        # Check if document exists
+        doc = doc_ref.get()
+        if doc.exists:
+            update.message.reply_text(f"The word '{command_text}' is already filtered.")
+        else:
+            # If document does not exist, create it with initial values
+            doc_ref.set({
+                'text': command_text,
+            })
+
+            update.message.reply_text(f"Filter for '{command_text}' added successfully!")
 #endregion Firebase
 
 #region Classes
@@ -1530,7 +1516,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("mute", mute))
     dispatcher.add_handler(CommandHandler("unmute", unmute))
     dispatcher.add_handler(CommandHandler("kick", kick))
-    dispatcher.add_handler(CommandHandler("test", test_firestore))
+    dispatcher.add_handler(CommandHandler("filter", filter))
     #endregion Admin Slash Command Handlers
     
     # Register the message handler for new users
