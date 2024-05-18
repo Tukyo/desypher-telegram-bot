@@ -1092,6 +1092,7 @@ def unmute_user(context: CallbackContext) -> None:
 def handle_message(update: Update, context: CallbackContext) -> None:
     
     delete_unallowed_addresses(update, context)
+    delete_filtered_phrases(update, context)
 
     handle_guess(update, context)
 
@@ -1160,6 +1161,35 @@ def delete_unallowed_addresses(update: Update, context: CallbackContext):
         if address.lower() not in allowed_addresses:
             update.message.delete()
             break
+
+def delete_filtered_phrases(update: Update, context: CallbackContext):
+    print("Checking message for filtered phrases...")
+
+    message_text = update.message.text.lower()  # Convert to lowercase for case-insensitive matching
+
+    filtered_phrases = [
+        "looks like a new signal",
+        "we will be redeploying",
+        "we will be airdropping our holders",
+        "register for the airdrop",
+        "about to drop another gem",
+        "about to give another coin",
+        "drop another gem",
+        "drop another coin",
+        "kindly",
+        "use my referral"
+        ]
+    
+    for phrase in filtered_phrases:
+        if phrase in message_text:
+            print(f"Found filtered phrase: {phrase}")
+            try:
+                update.message.delete()
+                print("Message deleted.")
+            except Exception as e:  # Catch potential errors in message deletion
+                print(f"Error deleting message: {e}")
+            break  # Exit loop after deleting the message 
+
 
 def delete_service_messages(update, context):
     # Check if the message ID is marked as non-deletable
@@ -1257,7 +1287,6 @@ def toggle_mute(update: Update, context: CallbackContext, mute: bool) -> None:
             chat_id=chat_id,
             user_id=user_id,
             permissions=ChatPermissions(
-                can_send_messages=not mute,
                 can_send_messages=not mute,
                 can_send_media_messages=not mute,
                 can_send_other_messages=not mute,
