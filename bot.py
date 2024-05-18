@@ -456,7 +456,7 @@ def ca(update: Update, context: CallbackContext) -> None:
 def whitepaper(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
         msg = update.message.reply_text(
-        'Whitepaper: https://desypher.net/whitepaper.html\n'
+        'https://desypher.net/whitepaper.html\n'
         )
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
