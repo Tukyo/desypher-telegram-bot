@@ -272,6 +272,7 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
     key = f"{chat_id}_{user_id}"
+    msg = None
 
     if key not in context.chat_data:
         # No active game found for key
@@ -364,8 +365,8 @@ def handle_guess(update: Update, context: CallbackContext) -> None:
 
         print(f"Game over. User failed to guess the word {chosen_word}. Clearing game data.")
         del context.chat_data[key]
-    
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def fetch_random_word() -> str:
     with open('words.json', 'r') as file:
@@ -1102,6 +1103,7 @@ def handle_message(update: Update, context: CallbackContext) -> None:
     user_id = update.message.from_user.id
     chat_id = update.message.chat.id
     username = update.message.from_user.username or update.message.from_user.first_name
+    msg = None
 
     if anti_spam.is_spam(user_id):
         mute_time = anti_spam.mute_time  # Get the mute time from AntiSpam class
@@ -1120,7 +1122,8 @@ def handle_message(update: Update, context: CallbackContext) -> None:
         job_queue = context.job_queue
         job_queue.run_once(unmute_user, mute_time, context={'chat_id': chat_id, 'user_id': user_id})
     
-    track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
 def rate_limit_check():
     global last_check_time, command_count
@@ -1141,6 +1144,10 @@ def rate_limit_check():
 def is_user_admin(update: Update, context: CallbackContext) -> bool:
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
+
+    if update.effective_chat.type == 'private':
+        print("User is in a private chat.")
+        return False
 
     # Check if the user is an admin in this chat
     chat_admins = context.bot.get_chat_administrators(chat_id)
@@ -1189,7 +1196,6 @@ def delete_filtered_phrases(update: Update, context: CallbackContext):
             except Exception as e:  # Catch potential errors in message deletion
                 print(f"Error deleting message: {e}")
             break  # Exit loop after deleting the message 
-
 
 def delete_service_messages(update, context):
     # Check if the message ID is marked as non-deletable
