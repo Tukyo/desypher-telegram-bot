@@ -728,44 +728,44 @@ def monitor_transfers():
 
 def handle_transfer_event(event):
     from_address = event['args']['from']
-    to_address = event['args']['to']
     amount = event['args']['value']
-    transaction_hash = event['transactionHash'].hex()
-
+    
+    # Check if the transfer is from the LP address
     if from_address.lower() == pool_address.lower():
+        # Convert amount to SYPHER (from Wei)
         sypher_amount = web3.from_wei(amount, 'ether')
-        sypher_price_in_usd = get_token_price_in_fiat(contract_address, 'usd')
 
+        # Fetch the USD price of SYPHER
+        sypher_price_in_usd = get_token_price_in_fiat(contract_address, 'usd')
         if sypher_price_in_usd is not None:
             sypher_price_in_usd = Decimal(sypher_price_in_usd)
             total_value_usd = sypher_amount * sypher_price_in_usd
+            if total_value_usd < 2500:
+                print("Ignoring small buy")
+                return
             value_message = f" ({total_value_usd:.2f} USD)"
             header_emoji, buyer_emoji = categorize_buyer(total_value_usd)
         else:
             value_message = " (USD price not available)"
-            header_emoji, buyer_emoji = "💸", "🐟"
+            header_emoji, buyer_emoji = "💸", "🐟"  # Default to Fish if unable to determine price
 
-        # Formatting message correctly with MarkdownV2
-        message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message}\n\n[Address](https://basescan.org/address/{escape_md_v2(to_address)}) • [Transaction](https://basescan.org/tx/{escape_md_v2(transaction_hash)})"
-        message = escape_md_v2(message)  # Applying escaping function
+        # Format message with Markdown
+        message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message}"
+        print(message)  # Debugging
 
         send_buy_message(message)
 
-def escape_md_v2(text):
-    escape_chars = '_*[]()~`>#+-=|{}.!'
-    return re.sub(r'([%s])' % escape_chars, r'\\\1', text)
-
 def categorize_buyer(usd_value):
-    if usd_value < 1:
+    if usd_value < 5000:
         return "💸", "🐟"
-    elif usd_value < 2:
+    elif usd_value < 1000:
         return "💰", "🐬"
     else:
         return "🤑", "🐳"
     
 def send_buy_message(text):
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    msg = bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='MarkdownV2')
+    msg = bot.send_message(chat_id=CHAT_ID, text=text)
     track_message(msg)
 #endregion Buybot
 
