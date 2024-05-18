@@ -159,10 +159,6 @@ def track_message(message):
     bot_messages.append((message.chat.id, message.message_id))
     print(f"Tracked message: {message.message_id}")
 
-def escape_md_v2(text):
-    escape_chars = r'\*_\[\]()~`>#+-=|{}.!'
-    return re.sub(r'([%s])' % escape_chars, r'\\\1', text)
-
 #region Main Slash Commands
 def start(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
@@ -756,7 +752,6 @@ def handle_transfer_event(event):
         message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message} \n\n[Address](https://basescan.org/address/{to_address} • [Transaction](https://basescan.org/tx/{transaction_hash})"
         print(message)  # Debugging
 
-        message = escape_md_v2(message)
         send_buy_message(message)
 
 def categorize_buyer(usd_value):
