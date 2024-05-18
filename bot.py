@@ -769,7 +769,7 @@ def categorize_buyer(usd_value):
     
 def send_buy_message(text):
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    msg = bot.send_message(chat_id=CHAT_ID, text=text, parse_mode=telegram.ParseMode.MARKDOWN_V2)
+    msg = bot.send_message(chat_id=CHAT_ID, text=text, parse_mode='Markdown')
     track_message(msg)
 #endregion Buybot
 
