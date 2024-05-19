@@ -299,32 +299,64 @@ def start(update: Update, context: CallbackContext) -> None:
 def help(update: Update, context: CallbackContext) -> None:
     msg = None
     if rate_limit_check():
-        msg = update.message.reply_text(
-            'Here are the commands you can use:\n'
-            '\n'
-            '/start: This starts the bot, and sends a welcome message.\n'
-            '/help: This is where you are now, you can see a list of commands here.\n'
-            '/play: Start a mini-game of deSypher within Telegram. Have fun!\n'
-            '/endgame: This will end your current game.\n'
-            '/tukyo: The developer of this bot, and deSypher.\n'
-            '/tukyogames: This will provide information about Tukyo Games and our projects.\n'
-            '/deSypher: This will direct you to the main game, you can play it using SYPHER tokens!\n'
-            '/whitepaper: This will provide you with a link to the deSypher whitepaper.\n'
-            '/sypher /tokenomics: These commands will provide you with information about the SYPHER token.\n'
-            '/contract /ca: These commands will show you the contract address for the SYPHER token.\n'
-            '/website: This will provide you with a link to the deSypher website.\n'
-            '/report: Respond to a message with this command to report it to group admins.\n'
-            '/save: Respond to a message with this command to receive it in your DMs.\n'
-            '/price: Price of the SYPHER token in USD. Use 3 digit currency modifiers to get the price in other fiat currencies. Ex: "/price eur".\n'
-            '/chart: This will reveal a price chart, and links to charting websites. Optional modifiers are "/chart d, h, m".\n'
-            '/liquidity /lp: View the liquidity value of the SYPHER V3 pool.\n'
-            '/volume: 24-hour trading volume of the SYPHER token.\n'
-        )
+        keyboard = [
+            [InlineKeyboardButton("/start", callback_data='start'),
+             InlineKeyboardButton("/play", callback_data='play'),
+             InlineKeyboardButton("/endgame", callback_data='endgame'),
+             InlineKeyboardButton("/tukyo", callback_data='tukyo')],
+            [InlineKeyboardButton("/tukyogames", callback_data='tukyogames'),
+             InlineKeyboardButton("/deSypher", callback_data='deSypher'),
+             InlineKeyboardButton("/whitepaper", callback_data='whitepaper'),
+             InlineKeyboardButton("/sypher", callback_data='sypher')],
+            [InlineKeyboardButton("/contract", callback_data='contract'),
+            InlineKeyboardButton("/website", callback_data='website'),
+            InlineKeyboardButton("/price", callback_data='price'),
+            InlineKeyboardButton("/chart", callback_data='chart')],
+            [InlineKeyboardButton("/liquidity", callback_data='liquidity'),
+            InlineKeyboardButton("/volume", callback_data='volume')]
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        msg = update.message.reply_text('Welcome to Sypher Bot! Below you will find all my commands:', reply_markup=reply_markup)
     else:
         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
     if msg is not None:
         track_message(msg)
+
+def help_buttons(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+
+    if query.data == 'start':
+        start(update, context)
+    elif query.data == 'play':
+        play(update, context)
+    elif query.data == 'endgame':
+        end_game(update, context)
+    elif query.data == 'tukyo':
+        tukyo(update, context)
+    elif query.data == 'tukyogames':
+        tukyogames(update, context)
+    elif query.data == 'deSypher':
+        deSypher(update, context)
+    elif query.data == 'whitepaper':
+        whitepaper(update, context)
+    elif query.data == 'sypher':
+        sypher(update, context)
+    elif query.data == 'contract':
+        ca(update, context)
+    elif query.data == 'website':
+        website(update, context)
+    elif query.data == 'price':
+        price(update, context)
+    elif query.data == 'chart':
+        chart(update, context)
+    elif query.data == 'liquidity':
+        liquidity(update, context)
+    elif query.data == 'volume':
+        volume(update, context)
 
 #region Play Game
 def play(update: Update, context: CallbackContext) -> None:
@@ -1559,6 +1591,7 @@ def main() -> None:
     #region General Slash Command Handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help))
+    dispatcher.add_handler(CallbackQueryHandler(help_buttons))
     dispatcher.add_handler(CommandHandler("play", play))
     dispatcher.add_handler(CommandHandler("endgame", end_game))
     dispatcher.add_handler(CommandHandler("tukyo", tukyo))
