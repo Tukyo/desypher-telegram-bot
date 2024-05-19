@@ -296,66 +296,66 @@ def start(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text('Bot rate limit exceeded. Please try again later.')
 
-# def help(update: Update, context: CallbackContext) -> None:
-#     msg = None
-#     if rate_limit_check():
-#         keyboard = [
-#             [InlineKeyboardButton("/play", callback_data='play'),
-#             InlineKeyboardButton("/endgame", callback_data='endgame')],
-#             [InlineKeyboardButton("/tukyo", callback_data='tukyo'),
-#             InlineKeyboardButton("/tukyogames", callback_data='tukyogames')],
-#             [InlineKeyboardButton("/deSypher", callback_data='deSypher'),
-#             InlineKeyboardButton("/sypher", callback_data='sypher'),
-#             InlineKeyboardButton("/website", callback_data='website')],
-#             [InlineKeyboardButton("/price", callback_data='price'),
-#             InlineKeyboardButton("/chart", callback_data='chart')],
-#             [InlineKeyboardButton("/contract", callback_data='contract'),
-#             InlineKeyboardButton("/liquidity", callback_data='liquidity'),
-#             InlineKeyboardButton("/volume", callback_data='volume')],
-#             [InlineKeyboardButton("/whitepaper", callback_data='whitepaper'),]
-#         ]
+def help(update: Update, context: CallbackContext) -> None:
+    msg = None
+    if rate_limit_check():
+        keyboard = [
+            [InlineKeyboardButton("/play", callback_data='help_play'),
+            InlineKeyboardButton("/endgame", callback_data='help_endgame')],
+            [InlineKeyboardButton("/tukyo", callback_data='help_tukyo'),
+            InlineKeyboardButton("/tukyogames", callback_data='help_tukyogames')],
+            [InlineKeyboardButton("/deSypher", callback_data='help_deSypher'),
+            InlineKeyboardButton("/sypher", callback_data='help_sypher'),
+            InlineKeyboardButton("/website", callback_data='help_website')],
+            [InlineKeyboardButton("/price", callback_data='help_price'),
+            InlineKeyboardButton("/chart", callback_data='help_chart')],
+            [InlineKeyboardButton("/contract", callback_data='help_contract'),
+            InlineKeyboardButton("/liquidity", callback_data='help_liquidity'),
+            InlineKeyboardButton("/volume", callback_data='help_volume')],
+            [InlineKeyboardButton("/whitepaper", callback_data='help_whitepaper'),]
+        ]
 
-#         reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
-#         msg = update.message.reply_text('Welcome to Sypher Bot! Below you will find all my commands:', reply_markup=reply_markup)
-#     else:
-#         msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
+        msg = update.message.reply_text('Welcome to Sypher Bot! Below you will find all my commands:', reply_markup=reply_markup)
+    else:
+        msg = update.message.reply_text('Bot rate limit exceeded. Please try again later.')
     
-#     if msg is not None:
-#         track_message(msg)
+    if msg is not None:
+        track_message(msg)
 
-# def help_buttons(update: Update, context: CallbackContext) -> None:
-#     query = update.callback_query
-#     query.answer()
+def help_buttons(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
 
-#     update = Update(update.update_id, message=query.message)
+    update = Update(update.update_id, message=query.message)
 
-#     if query.data == 'play':
-#         play(update, context)
-#     elif query.data == 'endgame':
-#         end_game(update, context)
-#     elif query.data == 'tukyo':
-#         tukyo(update, context)
-#     elif query.data == 'tukyogames':
-#         tukyogames(update, context)
-#     elif query.data == 'deSypher':
-#         deSypher(update, context)
-#     elif query.data == 'whitepaper':
-#         whitepaper(update, context)
-#     elif query.data == 'sypher':
-#         sypher(update, context)
-#     elif query.data == 'contract':
-#         ca(update, context)
-#     elif query.data == 'website':
-#         website(update, context)
-#     elif query.data == 'price':
-#         price(update, context)
-#     elif query.data == 'chart':
-#         chart(update, context)
-#     elif query.data == 'liquidity':
-#         liquidity(update, context)
-#     elif query.data == 'volume':
-#         volume(update, context)
+    if query.data == 'play':
+        play(update, context)
+    elif query.data == 'endgame':
+        end_game(update, context)
+    elif query.data == 'tukyo':
+        tukyo(update, context)
+    elif query.data == 'tukyogames':
+        tukyogames(update, context)
+    elif query.data == 'deSypher':
+        deSypher(update, context)
+    elif query.data == 'whitepaper':
+        whitepaper(update, context)
+    elif query.data == 'sypher':
+        sypher(update, context)
+    elif query.data == 'contract':
+        ca(update, context)
+    elif query.data == 'website':
+        website(update, context)
+    elif query.data == 'price':
+        price(update, context)
+    elif query.data == 'chart':
+        chart(update, context)
+    elif query.data == 'liquidity':
+        liquidity(update, context)
+    elif query.data == 'volume':
+        volume(update, context)
 
 #region Play Game
 def play(update: Update, context: CallbackContext) -> None:
@@ -1589,7 +1589,7 @@ def main() -> None:
     
     #region General Slash Command Handlers
     dispatcher.add_handler(CommandHandler("start", start))
-    # dispatcher.add_handler(CommandHandler("help", help))
+    dispatcher.add_handler(CommandHandler("help", help))
     dispatcher.add_handler(CommandHandler("play", play))
     dispatcher.add_handler(CommandHandler("endgame", end_game))
     dispatcher.add_handler(CommandHandler("tukyo", tukyo))
@@ -1608,7 +1608,6 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("website", website))
     dispatcher.add_handler(CommandHandler("report", report))
     dispatcher.add_handler(CommandHandler("save", save))
-    # dispatcher.add_handler(CallbackQueryHandler(help_buttons))
     #endregion General Slash Command Handlers
 
     #region Admin Slash Command Handlers
@@ -1639,6 +1638,7 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(handle_start_verification, pattern='start_verification'))
     dispatcher.add_handler(CallbackQueryHandler(handle_verification_button, pattern=r'verify_letter_[A-Z]'))
     dispatcher.add_handler(CallbackQueryHandler(handle_start_game, pattern='^startGame$'))
+    dispatcher.add_handler(CallbackQueryHandler(help_buttons, pattern='^help_'))
 
     monitor_thread = threading.Thread(target=monitor_transfers)
     monitor_thread.start()
