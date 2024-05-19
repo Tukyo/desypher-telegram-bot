@@ -115,6 +115,7 @@ db = firestore.client()
 
 print("Firebase initialized.")
 
+#region Database Slash Commands
 def filter(update, context):
     if is_user_admin(update, context):
 
@@ -159,6 +160,49 @@ def remove_filter(update, context):
             update.message.reply_text(f"'{command_text}' removed from filters!")
         else:
             update.message.reply_text(f"'{command_text}' is not in the filters.")
+
+def filter_list(update, context):
+    if is_user_admin(update, context):
+        docs = db.collection('filters').stream()
+
+        filters = [doc.id for doc in docs]
+        message = "\n".join(filters)
+
+        update.message.reply_text(message)
+
+def warn(update, context):
+    if is_user_admin(update, context):
+
+        user_id = update.message.reply_to_message.from_user.id
+
+        doc_ref = db.collection('warns').document(str(user_id))
+
+        doc = doc_ref.get()
+        if doc.exists:
+            warnings = doc.to_dict()['warnings']
+            doc_ref.update({
+                'warnings': warnings + 1,
+            })
+            update.message.reply_text(f"{user_id} has been warned. Total warnings: {warnings + 1}")
+            check_warns(update, context, user_id)
+        else:
+            doc_ref.set({
+                'id': user_id,
+                'warnings': 1,
+            })
+            update.message.reply_text(f"{user_id} has been warned. Total warnings: 1")
+
+def check_warns(update, context, user_id):
+    doc_ref = db.collection('warns').document(str(user_id))
+
+    doc = doc_ref.get()
+    if doc.exists:
+        warnings = doc.to_dict()['warnings']
+
+        if warnings >= 3:
+            context.bot.kick_chat_member(update.message.chat.id, user_id)
+            update.message.reply_text(f"Goodbye {user_id}!")
+#endregion Database Slash Commands
 
 #endregion Firebase
 
@@ -1537,6 +1581,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("kick", kick))
     dispatcher.add_handler(CommandHandler("filter", filter))
     dispatcher.add_handler(CommandHandler("removefilter", remove_filter))
+    dispatcher.add_handler(CommandHandler("filterlist", filter_list))
+    dispatcher.add_handler(CommandHandler("warn", warn))
     #endregion Admin Slash Command Handlers
     
     # Register the message handler for new users
