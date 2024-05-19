@@ -329,6 +329,8 @@ def help_buttons(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
 
+    update = Update(update.update_id, message=query.message)
+
     if query.data == 'start':
         start(update, context)
     elif query.data == 'play':
