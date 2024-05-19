@@ -1590,7 +1590,6 @@ def main() -> None:
     #region General Slash Command Handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help))
-    dispatcher.add_handler(CallbackQueryHandler(help_buttons))
     dispatcher.add_handler(CommandHandler("play", play))
     dispatcher.add_handler(CommandHandler("endgame", end_game))
     dispatcher.add_handler(CommandHandler("tukyo", tukyo))
@@ -1609,6 +1608,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("website", website))
     dispatcher.add_handler(CommandHandler("report", report))
     dispatcher.add_handler(CommandHandler("save", save))
+    dispatcher.add_handler(CallbackQueryHandler(help_buttons))
     #endregion General Slash Command Handlers
 
     #region Admin Slash Command Handlers
