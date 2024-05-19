@@ -125,20 +125,21 @@ def filter(update, context):
             return
         
         # Create or update the document in the 'filtered-words' collection
-        doc_ref = db.collection('filtered-words').document(command_text)
+        doc_ref = db.collection('filters').document(command_text)
 
         # Check if document exists
         doc = doc_ref.get()
         if doc.exists:
-            update.message.reply_text(f"The word '{command_text}' is already filtered.")
+            update.message.reply_text(f"'{command_text}' is already filtered.")
         else:
             # If document does not exist, create it with initial values
             doc_ref.set({
                 'text': command_text,
             })
 
-            update.message.reply_text(f"Filter for '{command_text}' added successfully!")
+            update.message.reply_text(f"'{command_text}' filtered!")
 #endregion Firebase
+
 
 #region Classes
 class AntiSpam:
@@ -1268,28 +1269,20 @@ def delete_filtered_phrases(update: Update, context: CallbackContext):
 
     message_text = update.message.text.lower()  # Convert to lowercase for case-insensitive matching
 
-    filtered_phrases = [
-        "looks like a new signal",
-        "we will be redeploying",
-        "we will be airdropping our holders",
-        "register for the airdrop",
-        "about to drop another gem",
-        "about to give another coin",
-        "drop another gem",
-        "drop another coin",
-        "kindly",
-        "use my referral"
-        ]
+    # Retrieve filtered words from Firestore
+    docs = db.collection('filters').stream()
+
+    filtered_phrases = [doc.id for doc in docs]
     
     for phrase in filtered_phrases:
         if phrase in message_text:
-            print(f"Found filtered phrase: {phrase}")
+            print(f"Found filter: {phrase}")
             try:
                 update.message.delete()
                 print("Message deleted.")
             except Exception as e:  # Catch potential errors in message deletion
                 print(f"Error deleting message: {e}")
-            break  # Exit loop after deleting the message 
+            break  # Exit loop after deleting the message
 
 def delete_blocked_links(update: Update, context: CallbackContext):
     print("Checking message for unallowed Telegram links...")
