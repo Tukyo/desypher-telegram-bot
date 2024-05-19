@@ -138,6 +138,28 @@ def filter(update, context):
             })
 
             update.message.reply_text(f"'{command_text}' filtered!")
+
+def remove_filter(update, context):
+    if is_user_admin(update, context):
+
+        command_text = update.message.text[len('/removefilter '):].strip().lower()
+
+        if not command_text:
+            update.message.reply_text("Please provide some text to remove.")
+            return
+
+        # Get the document in the 'filtered-words' collection
+        doc_ref = db.collection('filters').document(command_text)
+
+        # Check if document exists
+        doc = doc_ref.get()
+        if doc.exists:
+            # If document exists, delete it
+            doc_ref.delete()
+            update.message.reply_text(f"'{command_text}' removed from filters!")
+        else:
+            update.message.reply_text(f"'{command_text}' is not in the filters.")
+
 #endregion Firebase
 
 
@@ -1252,11 +1274,15 @@ def is_user_admin(update: Update, context: CallbackContext) -> bool:
 
 def delete_unallowed_addresses(update: Update, context: CallbackContext):
     print("Checking message for unallowed addresses...")
+
     message_text = update.message.text
+    
     found_addresses = eth_address_pattern.findall(message_text)
+
     print(f"Found addresses: {found_addresses}")
 
     allowed_addresses = [config['contractAddress'].lower(), config['lpAddress'].lower()]
+
     print(f"Allowed addresses: {allowed_addresses}")
 
     for address in found_addresses:
@@ -1510,6 +1536,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("unmute", unmute))
     dispatcher.add_handler(CommandHandler("kick", kick))
     dispatcher.add_handler(CommandHandler("filter", filter))
+    dispatcher.add_handler(CommandHandler("removefilter", remove_filter))
     #endregion Admin Slash Command Handlers
     
     # Register the message handler for new users
