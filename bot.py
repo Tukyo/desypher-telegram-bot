@@ -210,7 +210,6 @@ def check_warns(update, context, user_id):
 
 #endregion Firebase
 
-
 #region Classes
 class AntiSpam:
     def __init__(self, rate_limit, time_window, mute_time):
@@ -1087,7 +1086,7 @@ def handle_new_user(update: Update, context: CallbackContext) -> None:
 
         # Start a verification timeout job
         job_queue = context.job_queue
-        job_queue.run_once(verification_timeout, 6400, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
+        job_queue.run_once(verification_timeout, 600, context={'chat_id': chat_id, 'user_id': user_id, 'welcome_message_id': welcome_message_id}, name=str(user_id))
 
         update.message.delete()
 
@@ -1259,10 +1258,6 @@ def verification_timeout(context: CallbackContext) -> None:
     context.bot.delete_message(
         chat_id=job.context['chat_id'],
         message_id=job.context['welcome_message_id']
-    )
-    
-    msg = context.bot.send_message(
-        chat_id=job.context['chat_id'],
     )
 
     if msg is not None:
