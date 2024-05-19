@@ -300,8 +300,7 @@ def help(update: Update, context: CallbackContext) -> None:
     msg = None
     if rate_limit_check():
         keyboard = [
-            [InlineKeyboardButton("/start", callback_data='start'),
-            InlineKeyboardButton("/play", callback_data='play'),
+            [InlineKeyboardButton("/play", callback_data='play'),
             InlineKeyboardButton("/endgame", callback_data='endgame')],
             [InlineKeyboardButton("/tukyo", callback_data='tukyo'),
             InlineKeyboardButton("/tukyogames", callback_data='tukyogames')],
@@ -331,9 +330,7 @@ def help_buttons(update: Update, context: CallbackContext) -> None:
 
     update = Update(update.update_id, message=query.message)
 
-    if query.data == 'start':
-        start(update, context)
-    elif query.data == 'play':
+    if query.data == 'play':
         play(update, context)
     elif query.data == 'endgame':
         end_game(update, context)
