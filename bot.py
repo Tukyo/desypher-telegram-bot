@@ -1589,7 +1589,7 @@ def main() -> None:
     
     #region General Slash Command Handlers
     dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help))
+    # dispatcher.add_handler(CommandHandler("help", help))
     dispatcher.add_handler(CommandHandler("play", play))
     dispatcher.add_handler(CommandHandler("endgame", end_game))
     dispatcher.add_handler(CommandHandler("tukyo", tukyo))
