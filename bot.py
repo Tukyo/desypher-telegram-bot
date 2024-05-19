@@ -330,31 +330,31 @@ def help_buttons(update: Update, context: CallbackContext) -> None:
 
     update = Update(update.update_id, message=query.message)
 
-    if query.data == 'play':
+    if query.data == 'help_play':
         play(update, context)
-    elif query.data == 'endgame':
+    elif query.data == 'help_endgame':
         end_game(update, context)
-    elif query.data == 'tukyo':
+    elif query.data == 'help_tukyo':
         tukyo(update, context)
-    elif query.data == 'tukyogames':
+    elif query.data == 'help_tukyogames':
         tukyogames(update, context)
-    elif query.data == 'deSypher':
+    elif query.data == 'help_deSypher':
         deSypher(update, context)
-    elif query.data == 'whitepaper':
+    elif query.data == 'help_whitepaper':
         whitepaper(update, context)
-    elif query.data == 'sypher':
+    elif query.data == 'help_sypher':
         sypher(update, context)
-    elif query.data == 'contract':
+    elif query.data == 'help_contract':
         ca(update, context)
-    elif query.data == 'website':
+    elif query.data == 'help_website':
         website(update, context)
-    elif query.data == 'price':
+    elif query.data == 'help_price':
         price(update, context)
-    elif query.data == 'chart':
+    elif query.data == 'help_chart':
         chart(update, context)
-    elif query.data == 'liquidity':
+    elif query.data == 'help_liquidity':
         liquidity(update, context)
-    elif query.data == 'volume':
+    elif query.data == 'help_volume':
         volume(update, context)
 
 #region Play Game
