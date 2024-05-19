@@ -301,19 +301,19 @@ def help(update: Update, context: CallbackContext) -> None:
     if rate_limit_check():
         keyboard = [
             [InlineKeyboardButton("/start", callback_data='start'),
-             InlineKeyboardButton("/play", callback_data='play'),
-             InlineKeyboardButton("/endgame", callback_data='endgame'),
-             InlineKeyboardButton("/tukyo", callback_data='tukyo')],
-            [InlineKeyboardButton("/tukyogames", callback_data='tukyogames'),
-             InlineKeyboardButton("/deSypher", callback_data='deSypher'),
-             InlineKeyboardButton("/whitepaper", callback_data='whitepaper'),
-             InlineKeyboardButton("/sypher", callback_data='sypher')],
-            [InlineKeyboardButton("/contract", callback_data='contract'),
-            InlineKeyboardButton("/website", callback_data='website'),
-            InlineKeyboardButton("/price", callback_data='price'),
+            InlineKeyboardButton("/play", callback_data='play'),
+            InlineKeyboardButton("/endgame", callback_data='endgame')],
+            [InlineKeyboardButton("/tukyo", callback_data='tukyo'),
+            InlineKeyboardButton("/tukyogames", callback_data='tukyogames')],
+            [InlineKeyboardButton("/deSypher", callback_data='deSypher'),
+            InlineKeyboardButton("/sypher", callback_data='sypher'),
+            InlineKeyboardButton("/website", callback_data='website')],
+            [InlineKeyboardButton("/price", callback_data='price'),
             InlineKeyboardButton("/chart", callback_data='chart')],
-            [InlineKeyboardButton("/liquidity", callback_data='liquidity'),
-            InlineKeyboardButton("/volume", callback_data='volume')]
+            [InlineKeyboardButton("/contract", callback_data='contract'),
+            InlineKeyboardButton("/liquidity", callback_data='liquidity'),
+            InlineKeyboardButton("/volume", callback_data='volume')],
+            [InlineKeyboardButton("/whitepaper", callback_data='whitepaper'),]
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
