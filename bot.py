@@ -52,6 +52,10 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandle
 #### /antiraid end /anti-raid [user_amount] [time_out] [anti_raid_time]
 ### /mute /unmute - Reply to a message with this command to toggle mute for a user
 ### /kick - Reply to a message with this command to kick a user from the chat
+### /warn - Reply to a message with this command to warn a user
+### /filter - Filter a word or phrase from the chat
+### /removefilter - Remove a word or phrase from the filter list
+### /filterlist - Get a list of filtered words
 #
 
 with open('config.json') as f:
@@ -1401,6 +1405,10 @@ def admin_help(update: Update, context: CallbackContext) -> None:
             "/mute - Mute a user\n"
             "/unmute - Unmute a user\n"
             "/kick - Kick a user\n"
+            "/warn - Warn a user\n"
+            "/filter - Filter a word or phrase\n"
+            "/removefilter - Remove a filtered word or phrase\n"
+            "/filterlist - List all filtered words and phrases\n"
         )
     
     if msg is not None:

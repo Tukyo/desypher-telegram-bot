@@ -42,5 +42,9 @@ Website: https://desypher.net/
   - **/antiraid end** / **/anti-raid [user_amount] [time_out] [anti_raid_time]**
 - **/mute** / **/unmute** - Reply to a message with this command to toggle mute for a user
 - **/kick** - Reply to a message with this command to kick a user from the chat
+- **/warn** - Reply to a message with this command to warn a user
+- **/filter** - Use this with any word or phrase to block it from the chat
+- **/removefilter** - Remvoe a specific word or phrase from the list
+- **/filterlist** - Check all the filtered words and phrases
 
 For more information about the deSypher project, visit [our website](https://desypher.net/).
