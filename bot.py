@@ -77,7 +77,7 @@ pool_address = config['lpAddress']
 abi = config['abi']
 
 eth_address_pattern = re.compile(r'\b0x[a-fA-F0-9]{40}\b')
-telegram_links_pattern = re.compile(r'https://t.me/\S+')
+telegram_links_pattern = re.compile(r't.me/\S+')
 
 if web3.is_connected():
     network_id = web3.net.version
@@ -912,7 +912,6 @@ def handle_transfer_event(event):
         # Convert amount to SYPHER (from Wei)
         sypher_amount = web3.from_wei(amount, 'ether')
 
-        # Fetch the USD price of SYPHER
         sypher_price_in_usd = get_token_price_in_fiat(contract_address, 'usd')
         if sypher_price_in_usd is not None:
             sypher_price_in_usd = Decimal(sypher_price_in_usd)
@@ -925,9 +924,8 @@ def handle_transfer_event(event):
         else:
             print("Unable to fetch price due to rate limiting.")
 
-        # Format message with Markdown
         message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message}"
-        print(message)  # Debugging
+        print(message)
 
         send_buy_message(message)
 
@@ -1250,12 +1248,12 @@ def verification_timeout(context: CallbackContext) -> None:
     msg = None
     job = context.job
     context.bot.kick_chat_member(
-        chat_id=job.context['chat_id'],
+        chat_id=job.context[CHAT_ID],
         user_id=job.context['user_id']
     )
     
     context.bot.delete_message(
-        chat_id=job.context['chat_id'],
+        chat_id=job.context[CHAT_ID],
         message_id=job.context['welcome_message_id']
     )
 
@@ -1349,6 +1347,10 @@ def delete_unallowed_addresses(update: Update, context: CallbackContext):
     print("Checking message for unallowed addresses...")
 
     message_text = update.message.text
+
+    if message_text is None:
+        print("No text in message.")
+        return
     
     found_addresses = eth_address_pattern.findall(message_text)
 
@@ -1365,6 +1367,12 @@ def delete_unallowed_addresses(update: Update, context: CallbackContext):
 
 def delete_filtered_phrases(update: Update, context: CallbackContext):
     print("Checking message for filtered phrases...")
+
+    message_text = update.message.text
+
+    if message_text is None:
+        print("No text in message.")
+        return
 
     message_text = update.message.text.lower()  # Convert to lowercase for case-insensitive matching
 
@@ -1386,6 +1394,11 @@ def delete_filtered_phrases(update: Update, context: CallbackContext):
 def delete_blocked_links(update: Update, context: CallbackContext):
     print("Checking message for unallowed Telegram links...")
     message_text = update.message.text
+
+    if message_text is None:
+        print("No text in message.")
+        return
+    
     found_links = telegram_links_pattern.findall(message_text)
     print(f"Found Telegram links: {found_links}")
 
