@@ -923,8 +923,7 @@ def handle_transfer_event(event):
             value_message = f" ({total_value_usd:.2f} USD)"
             header_emoji, buyer_emoji = categorize_buyer(total_value_usd)
         else:
-            value_message = " (USD price not available)"
-            header_emoji, buyer_emoji = "💸", "🐟"  # Default to Fish if unable to determine price
+            print("Unable to fetch price due to rate limiting.")
 
         # Format message with Markdown
         message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message}"
