@@ -1248,18 +1248,17 @@ def verification_timeout(context: CallbackContext) -> None:
     msg = None
     job = context.job
     context.bot.kick_chat_member(
-        chat_id=job.context[CHAT_ID],
+        chat_id=job.context['chat_id'],
         user_id=job.context['user_id']
     )
     
     context.bot.delete_message(
-        chat_id=job.context[CHAT_ID],
+        chat_id=job.context['chat_id'],
         message_id=job.context['welcome_message_id']
     )
 
     if msg is not None:
         track_message(msg)
-#endregion User Verification
 
 #region Admin Controls
 def unmute_user(context: CallbackContext) -> None:
