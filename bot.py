@@ -1277,15 +1277,15 @@ def unmute_user(context: CallbackContext) -> None:
     )
 
 def handle_message(update: Update, context: CallbackContext) -> None:
-    
-    delete_unallowed_addresses(update, context)
-    delete_filtered_phrases(update, context)
-    delete_blocked_links(update, context)
 
     handle_guess(update, context)
 
     if is_user_admin(update, context):
         return
+    
+    delete_unallowed_addresses(update, context)
+    delete_filtered_phrases(update, context)
+    delete_blocked_links(update, context)
     
     user_id = update.message.from_user.id
     chat_id = update.message.chat.id
