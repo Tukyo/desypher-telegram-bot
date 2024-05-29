@@ -916,7 +916,7 @@ def handle_transfer_event(event):
         if sypher_price_in_usd is not None:
             sypher_price_in_usd = Decimal(sypher_price_in_usd)
             total_value_usd = sypher_amount * sypher_price_in_usd
-            if total_value_usd < 500:
+            if total_value_usd < 1000:
                 print("Ignoring small buy")
                 return
             value_message = f" ({total_value_usd:.2f} USD)"
