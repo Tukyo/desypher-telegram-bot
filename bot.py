@@ -924,7 +924,7 @@ def handle_transfer_event(event):
         else:
             print("Unable to fetch price due to rate limiting.")
 
-        message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount} SYPHER{value_message}"
+        message = f"{header_emoji}SYPHER BUY{header_emoji}\n\n{buyer_emoji} {sypher_amount:.2f} SYPHER{value_message}"
         print(message)
 
         send_buy_message(message)
