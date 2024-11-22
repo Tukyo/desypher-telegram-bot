@@ -2,6 +2,13 @@
 
 # deSypher Telegram Bot
 
+THIS REPOSITORY IS DEPRECIATED!
+
+PLEASE NAVIGATE TO THE PUBLIC VERSION OF THIS REPOSITORY WITH UPDATED AND MAINTAINED CODE!
+
+NEW AND IMPROVED BOT:
+[Sypherbot](https://github.com/Tukyo/sypherbot-public)
+
 The deSypher Telegram Bot is part of the deSypher project, providing an interactive experience for users directly within Telegram. This bot can handle various commands and interact with users to enhance their engagement with the deSypher platform.
 
 Information • Games • Price/Charting • Buys • Admin Commands
